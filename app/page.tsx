@@ -242,11 +242,11 @@ export default function HomePage() {
           <Play size={36} fill="currentColor" className="ml-1" />
         </div>
 
-        <div className="glass-card p-6 sm:p-7 rounded-3xl max-w-md mx-auto shadow-xl">
+        <div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
             KOCOK KEKAR
           </h1>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-2 font-medium">
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
             Papan hitung skor modern untuk permainan kartu Ceki 4 orang.
             Tersimpan otomatis, sinkron real-time, dan siap dipakai di HP maupun desktop.
           </p>
