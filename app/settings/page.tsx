@@ -54,13 +54,13 @@ export default function SettingsPage() {
   // Form State
   const [defaultInitialScore, setDefaultInitialScore] = useState<number>(0);
   const [defaultWinCondition, setDefaultWinCondition] = useState<'highest' | 'lowest'>('highest');
-  const [defaultScoreLimit, setDefaultScoreLimit] = useState<string>('');
+  const [defaultScoreLimit, setDefaultScoreLimit] = useState<string>('250');
   const [defaultScoreLimitAction, setDefaultScoreLimitAction] = useState<'notify' | 'ask' | 'auto'>('ask');
   const [defaultZeroSum, setDefaultZeroSum] = useState<boolean>(false);
   const [vibration, setVibration] = useState<boolean>(true);
   const [roundScoreMin, setRoundScoreMin] = useState<number>(-9999);
   const [roundScoreMax, setRoundScoreMax] = useState<number>(9999);
-  const [defaultQuickValues, setDefaultQuickValues] = useState<number[]>([1, 5, 10, 20]);
+  const [defaultQuickValues, setDefaultQuickValues] = useState<number[]>([5, 15, 25]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
@@ -74,13 +74,21 @@ export default function SettingsPage() {
     if (settings) {
       setDefaultInitialScore(settings.defaultInitialScore ?? 0);
       setDefaultWinCondition(settings.defaultWinCondition ?? 'highest');
-      setDefaultScoreLimit(settings.defaultScoreLimit ? String(settings.defaultScoreLimit) : '');
+      setDefaultScoreLimit(
+        settings.defaultScoreLimit !== undefined && settings.defaultScoreLimit !== null
+          ? String(settings.defaultScoreLimit)
+          : '250'
+      );
       setDefaultScoreLimitAction(settings.defaultScoreLimitAction ?? 'ask');
       setDefaultZeroSum(settings.defaultZeroSum ?? false);
       setVibration(settings.vibration ?? true);
       setRoundScoreMin(settings.roundScoreMin ?? -9999);
       setRoundScoreMax(settings.roundScoreMax ?? 9999);
-      setDefaultQuickValues(settings.defaultQuickValues ?? [1, 5, 10, 20]);
+      setDefaultQuickValues(
+        settings.defaultQuickValues && settings.defaultQuickValues.length > 0
+          ? settings.defaultQuickValues
+          : [5, 15, 25]
+      );
     }
   }, [settings]);
 
@@ -313,6 +321,63 @@ export default function SettingsPage() {
                 {val}
               </button>
             ))}
+          </div>
+          {defaultScoreLimit !== '' && (
+            <div className="mt-2 max-w-xs">
+              <span className="text-[11px] text-slate-400 block mb-1">Ketik Angka Batas Skor</span>
+              <input
+                type="number"
+                value={defaultScoreLimit}
+                onChange={(e) => setDefaultScoreLimit(e.target.value)}
+                min={1}
+                max={99999}
+                className="input-field text-xs py-2"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Preset Nilai Cepat Default */}
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+            Preset Nilai Cepat Default (Tombol +/- Cepat di Layar Skor)
+          </label>
+          <p className="text-[11px] text-slate-400 mb-2">
+            Pilih nilai preset default untuk tombol tambah/kurang cepat (mis. 5, 15, 25)
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_VALUE_PRESETS.map((val) => {
+              const isSelected = defaultQuickValues.includes(val);
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => {
+                    setDefaultQuickValues((prev) => {
+                      if (prev.includes(val)) {
+                        if (prev.length <= 1) {
+                          toast.warning('Minimal 1 nilai preset cepat');
+                          return prev;
+                        }
+                        return prev.filter((v) => v !== val);
+                      }
+                      if (prev.length >= 8) {
+                        toast.warning('Maksimal 8 preset nilai cepat');
+                        return prev;
+                      }
+                      return [...prev, val].sort((a, b) => a - b);
+                    });
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
+                    isSelected
+                      ? 'bg-emerald-500 text-white shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  {val}
+                </button>
+              );
+            })}
           </div>
         </div>
 

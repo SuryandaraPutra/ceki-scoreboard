@@ -15,13 +15,13 @@ export const PLAYER_COLOR_OPTIONS = [
 ];
 
 /** Preset nilai cepat default */
-export const DEFAULT_QUICK_VALUES = [1, 5, 10, 20];
+export const DEFAULT_QUICK_VALUES = [5, 15, 25];
 
 /** Preset nilai cepat yang bisa dipilih */
-export const QUICK_VALUE_PRESETS = [1, 2, 5, 10, 20, 25, 50, 100];
+export const QUICK_VALUE_PRESETS = [1, 2, 5, 10, 15, 20, 25, 50, 100];
 
 /** Preset batas skor */
-export const SCORE_LIMIT_PRESETS = [50, 100, 200, 500, 1000];
+export const SCORE_LIMIT_PRESETS = [50, 100, 200, 250, 500, 1000];
 
 /** Pesan konfirmasi standar */
 export const CONFIRM_MESSAGES = {

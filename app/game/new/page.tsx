@@ -36,14 +36,50 @@ export default function NewGamePage() {
     settings?.defaultWinCondition ?? 'highest'
   );
   const [scoreLimit, setScoreLimit] = useState<string>(
-    settings?.defaultScoreLimit ? String(settings.defaultScoreLimit) : ''
+    settings?.defaultScoreLimit !== undefined && settings?.defaultScoreLimit !== null
+      ? String(settings.defaultScoreLimit)
+      : '250'
   );
   const [scoreLimitAction, setScoreLimitAction] = useState<'notify' | 'ask' | 'auto'>(
     settings?.defaultScoreLimitAction ?? 'ask'
   );
   const [zeroSum, setZeroSum] = useState<boolean>(settings?.defaultZeroSum ?? false);
-  const [quickValues, setQuickValues] = useState<number[]>([1, 5, 10, 20]);
+  const [quickValues, setQuickValues] = useState<number[]>(
+    settings?.defaultQuickValues && settings.defaultQuickValues.length > 0
+      ? settings.defaultQuickValues
+      : [5, 15, 25]
+  );
   const [targetRounds, setTargetRounds] = useState<string>('');
+
+  // Sinkronisasi state saat settings dimuat
+  React.useEffect(() => {
+    if (settings) {
+      if (settings.defaultScoreLimit !== undefined && settings.defaultScoreLimit !== null) {
+        setScoreLimit(String(settings.defaultScoreLimit));
+      } else {
+        setScoreLimit('250');
+      }
+      if (
+        settings.defaultQuickValues &&
+        Array.isArray(settings.defaultQuickValues) &&
+        settings.defaultQuickValues.length > 0
+      ) {
+        setQuickValues(settings.defaultQuickValues);
+      }
+      if (settings.defaultInitialScore !== undefined) {
+        setInitialScore(settings.defaultInitialScore);
+      }
+      if (settings.defaultWinCondition) {
+        setWinCondition(settings.defaultWinCondition);
+      }
+      if (settings.defaultScoreLimitAction) {
+        setScoreLimitAction(settings.defaultScoreLimitAction);
+      }
+      if (settings.defaultZeroSum !== undefined) {
+        setZeroSum(settings.defaultZeroSum);
+      }
+    }
+  }, [settings]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);

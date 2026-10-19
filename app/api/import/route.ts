@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
               quickValues:
                 typeof g.quickValues === 'string'
                   ? g.quickValues
-                  : JSON.stringify(g.quickValues ?? [1, 5, 10, 20]),
+                  : JSON.stringify(g.quickValues ?? [5, 15, 25]),
               targetRounds: g.targetRounds ?? null,
               startedAt: g.startedAt ?? sql`(unixepoch())`,
               finishedAt: g.finishedAt ?? null,
@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
               defaultQuickValues:
                 typeof s.defaultQuickValues === 'string'
                   ? s.defaultQuickValues
-                  : JSON.stringify(s.defaultQuickValues ?? [1, 5, 10, 20]),
+                  : JSON.stringify(s.defaultQuickValues ?? [5, 15, 25]),
               roundScoreMin: s.roundScoreMin ?? -9999,
               roundScoreMax: s.roundScoreMax ?? 9999,
               defaultZeroSum: Boolean(s.defaultZeroSum),

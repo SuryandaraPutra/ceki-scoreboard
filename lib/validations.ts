@@ -73,7 +73,7 @@ export const CreateGameSchema = z.object({
     .min(1, 'Batas skor minimal 1')
     .max(99999, 'Batas skor maksimal 99999')
     .nullable()
-    .optional(),
+    .default(250),
   scoreLimitAction: z
     .enum(['notify', 'ask', 'auto'], {
       errorMap: () => ({
@@ -86,7 +86,7 @@ export const CreateGameSchema = z.object({
     .array(z.number().int().positive())
     .min(1, 'Minimal 1 nilai preset')
     .max(8, 'Maksimal 8 nilai preset')
-    .default([1, 5, 10, 20]),
+    .default([5, 15, 25]),
   targetRounds: z
     .number()
     .int()

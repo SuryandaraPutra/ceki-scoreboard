@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { games, gamePlayers, players, rounds, roundScores } from '@/lib/schema';
 import { CreateGameSchema, makeError } from '@/lib/validations';
-import { getOrCreateSettings } from '@/lib/settings';
+import { getOrCreateSettings, parseQuickValues } from '@/lib/settings';
 import { calculateScores } from '@/lib/calc';
 import { eq, desc, sql, inArray } from 'drizzle-orm';
 
@@ -149,11 +149,15 @@ export async function POST(req: NextRequest) {
       scoreLimit:
         body.scoreLimit !== undefined
           ? body.scoreLimit
-          : appSettings.defaultScoreLimit,
+          : (appSettings.defaultScoreLimit ?? 250),
       scoreLimitAction:
         body.scoreLimitAction ?? appSettings.defaultScoreLimitAction,
       zeroSum: body.zeroSum ?? appSettings.defaultZeroSum,
-      quickValues: body.quickValues ?? [1, 5, 10, 20],
+      quickValues:
+        body.quickValues ??
+        (appSettings.defaultQuickValues
+          ? parseQuickValues(appSettings.defaultQuickValues)
+          : [5, 15, 25]),
       targetRounds: body.targetRounds,
     });
 

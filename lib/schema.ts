@@ -63,14 +63,14 @@ export const games = sqliteTable('games', {
   winCondition: text('win_condition').notNull().default('highest'),
   /** Skor awal tiap pemain */
   initialScore: integer('initial_score').notNull().default(0),
-  /** Batas skor tertinggi opsional (null = tidak ada batas) */
-  scoreLimit: integer('score_limit'),
+  /** Batas skor tertinggi opsional (default 250) */
+  scoreLimit: integer('score_limit').default(250),
   /** Aksi saat batas tercapai: 'notify' | 'ask' | 'auto' */
   scoreLimitAction: text('score_limit_action').notNull().default('ask'),
   /** Mode zero-sum: total skor semua pemain dalam satu round harus = 0 */
   zeroSum: integer('zero_sum', { mode: 'boolean' }).notNull().default(false),
-  /** Preset nilai cepat, disimpan sebagai JSON string, mis. "[1,5,10,20]" */
-  quickValues: text('quick_values').notNull().default('[1,5,10,20]'),
+  /** Preset nilai cepat, disimpan sebagai JSON string, mis. "[5,15,25]" */
+  quickValues: text('quick_values').notNull().default('[5,15,25]'),
   /** Target jumlah round (opsional) */
   targetRounds: integer('target_rounds'),
   startedAt: integer('started_at')
@@ -169,8 +169,8 @@ export const roundScores = sqliteTable(
 // ─────────────────────────────────────────────
 export const settings = sqliteTable('settings', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  /** Batas skor default untuk game baru (null = tidak ada batas) */
-  defaultScoreLimit: integer('default_score_limit'),
+  /** Batas skor default untuk game baru (default 250) */
+  defaultScoreLimit: integer('default_score_limit').default(250),
   /** Aksi batas skor default */
   defaultScoreLimitAction: text('default_score_limit_action')
     .notNull()
@@ -184,7 +184,7 @@ export const settings = sqliteTable('settings', {
   /** Preset nilai cepat default (JSON string) */
   defaultQuickValues: text('default_quick_values')
     .notNull()
-    .default('[1,5,10,20]'),
+    .default('[5,15,25]'),
   /** Batas nilai per round: min dan max (JSON string) */
   roundScoreMin: integer('round_score_min').notNull().default(-9999),
   roundScoreMax: integer('round_score_max').notNull().default(9999),

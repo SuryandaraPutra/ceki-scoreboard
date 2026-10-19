@@ -19,7 +19,7 @@ export async function GET() {
     const currentSettings = await getOrCreateSettings();
 
     // Parse JSON string field quickValues
-    let quickValues = [1, 5, 10, 20];
+    let quickValues = [5, 15, 25];
     try {
       quickValues = JSON.parse(currentSettings.defaultQuickValues);
     } catch {
@@ -94,7 +94,7 @@ export async function PUT(req: NextRequest) {
       .where(eq(settings.id, current.id))
       .returning();
 
-    let quickValues = [1, 5, 10, 20];
+    let quickValues = [5, 15, 25];
     try {
       quickValues = JSON.parse(updated.defaultQuickValues);
     } catch {

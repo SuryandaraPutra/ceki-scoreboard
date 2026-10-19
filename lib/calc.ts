@@ -402,6 +402,6 @@ export function parseQuickValues(jsonStr: string): number[] {
   } catch {
     // Jika gagal parse, gunakan default
   }
-  return [1, 5, 10, 20];
+  return [5, 15, 25];
 }
 

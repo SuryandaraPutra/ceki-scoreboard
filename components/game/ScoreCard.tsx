@@ -195,7 +195,12 @@ export function ScoreCard({
         </div>
 
         {/* Chip Nilai Cepat (+ dan -) */}
-        <div className="grid grid-cols-4 gap-1 mt-0.5">
+        <div
+          className="grid gap-1 mt-0.5"
+          style={{
+            gridTemplateColumns: `repeat(${Math.min(quickValues.length || 3, 4)}, minmax(0, 1fr))`,
+          }}
+        >
           {quickValues.slice(0, 4).map((val) => (
             <div key={val} className="flex gap-0.5">
               <button

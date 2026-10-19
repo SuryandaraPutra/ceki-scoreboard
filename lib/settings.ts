@@ -5,14 +5,15 @@
 
 import { db, ensureDbSchema } from './db';
 import { settings } from './schema';
+import { eq } from 'drizzle-orm';
 
 /** Nilai default settings */
 export const DEFAULT_SETTINGS = {
-  defaultScoreLimit: null,
+  defaultScoreLimit: 250,
   defaultScoreLimitAction: 'ask' as const,
   defaultWinCondition: 'highest' as const,
   defaultInitialScore: 0,
-  defaultQuickValues: '[1,5,10,20]',
+  defaultQuickValues: '[5,15,25]',
   roundScoreMin: -9999,
   roundScoreMax: 9999,
   defaultZeroSum: false,
@@ -29,7 +30,24 @@ export async function getOrCreateSettings() {
     const existing = await db.select().from(settings).limit(1);
 
     if (existing.length > 0) {
-      return existing[0];
+      const current = existing[0];
+      // Jika baris settings lama masih null untuk score limit atau '[1,5,10,20]', otomatis perbarui ke default baru
+      if (current.defaultScoreLimit === null || current.defaultQuickValues === '[1,5,10,20]') {
+        const updates: Partial<typeof current> = {};
+        if (current.defaultScoreLimit === null) {
+          updates.defaultScoreLimit = 250;
+        }
+        if (current.defaultQuickValues === '[1,5,10,20]' || !current.defaultQuickValues) {
+          updates.defaultQuickValues = '[5,15,25]';
+        }
+        try {
+          await db.update(settings).set(updates).where(eq(settings.id, current.id));
+          return { ...current, ...updates };
+        } catch {
+          return { ...current, ...updates };
+        }
+      }
+      return current;
     }
 
     // Buat settings default
@@ -48,7 +66,23 @@ export async function getOrCreateSettings() {
     ) {
       await ensureDbSchema();
       const existing = await db.select().from(settings).limit(1);
-      if (existing.length > 0) return existing[0];
+      if (existing.length > 0) {
+        const current = existing[0];
+        if (current.defaultScoreLimit === null || current.defaultQuickValues === '[1,5,10,20]') {
+          const updates: Partial<typeof current> = {};
+          if (current.defaultScoreLimit === null) updates.defaultScoreLimit = 250;
+          if (current.defaultQuickValues === '[1,5,10,20]' || !current.defaultQuickValues) {
+            updates.defaultQuickValues = '[5,15,25]';
+          }
+          try {
+            await db.update(settings).set(updates).where(eq(settings.id, current.id));
+            return { ...current, ...updates };
+          } catch {
+            return { ...current, ...updates };
+          }
+        }
+        return current;
+      }
       const [created] = await db
         .insert(settings)
         .values(DEFAULT_SETTINGS)
@@ -71,5 +105,5 @@ export function parseQuickValues(jsonStr: string): number[] {
   } catch {
     // Jika gagal parse, gunakan default
   }
-  return [1, 5, 10, 20];
+  return [5, 15, 25];
 }
