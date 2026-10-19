@@ -11,14 +11,14 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Ceki Scoreboard — Papan Skor Permainan Kartu Ceki 4 Orang',
+  title: 'KOCOK KEKAR — Papan Skor Permainan Kartu Ceki 4 Orang',
   description:
     'Aplikasi pencatat skor permainan kartu Ceki untuk 4 pemain. Dilengkapi kalkulasi otomatis, leaderboard, rekor tertinggi, foto profil, dan sinkronisasi real-time.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Ceki Scoreboard',
+    title: 'KOCOK KEKAR',
   },
   icons: {
     icon: '/favicon.ico',

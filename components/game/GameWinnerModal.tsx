@@ -88,7 +88,7 @@ export function GameWinnerModal({
   }, [isOpen]);
 
   const handleShare = async () => {
-    const success = await shareOrCopy(summaryText, 'Hasil Ceki Scoreboard');
+    const success = await shareOrCopy(summaryText, 'Hasil KOCOK KEKAR');
     if (success) {
       toast.success('Ringkasan skor disalin / dibagikan!');
     } else {

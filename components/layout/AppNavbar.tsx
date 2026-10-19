@@ -32,7 +32,7 @@ export function AppNavbar() {
           </div>
           <div className="flex flex-col">
             <span className="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 dark:from-emerald-400 dark:via-teal-400 dark:to-sky-400 bg-clip-text text-transparent">
-              Ceki Scoreboard
+              KOCOK KEKAR
             </span>
             <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tracking-wider uppercase -mt-1 hidden sm:block">
               4-Pemain Kartu Ceki

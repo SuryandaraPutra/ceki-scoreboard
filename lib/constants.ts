@@ -74,7 +74,7 @@ export function canShare(): boolean {
 }
 
 /** Salin teks ke clipboard atau share via Web Share API */
-export async function shareOrCopy(text: string, title = 'Ceki Scoreboard'): Promise<boolean> {
+export async function shareOrCopy(text: string, title = 'KOCOK KEKAR'): Promise<boolean> {
   if (canShare()) {
     try {
       await navigator.share({ title, text });

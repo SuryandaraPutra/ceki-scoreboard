@@ -342,7 +342,7 @@ export function formatGameSummary(
   const medal = ['🥇', '🥈', '🥉', '4️⃣'];
 
   const lines = [
-    `🎴 *Ceki Scoreboard*`,
+    `🎴 *KOCOK KEKAR*`,
     gameName ? `📋 ${gameName}` : '',
     `📅 ${dateStr}`,
     ``,

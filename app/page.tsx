@@ -244,7 +244,7 @@ export default function HomePage() {
 
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-            Ceki Scoreboard
+            KOCOK KEKAR
           </h1>
           <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
             Papan hitung skor modern untuk permainan kartu Ceki 4 orang.

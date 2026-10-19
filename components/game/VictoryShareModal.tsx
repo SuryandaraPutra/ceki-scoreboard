@@ -153,7 +153,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       // ─────────────────────────────────────────────
       // 2. HEADER: BADGE PERTANDINGAN & TANGGAL
       // ─────────────────────────────────────────────
-      // Pill Label Ceki Scoreboard
+      // Pill Label KOCOK KEKAR
       ctx.save();
       const pillWidth = 430;
       const pillX = (W - pillWidth) / 2;
@@ -167,7 +167,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#fca5a5';
       ctx.textAlign = 'center';
-      ctx.fillText('⚡ CEKI SCOREBOARD • OFFICIAL MATCH RESULT ⚡', cx, 79);
+      ctx.fillText('⚡ KOCOK KEKAR • OFFICIAL MATCH RESULT ⚡', cx, 79);
       ctx.restore();
 
       // Info Game & Tanggal
@@ -400,7 +400,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.font = '500 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#64748b';
       ctx.textAlign = 'left';
-      ctx.fillText('🃏 Disimpan dari Ceki Scoreboard • 4 Pemain', 60, 842);
+      ctx.fillText('🃏 Disimpan dari KOCOK KEKAR • 4 Pemain', 60, 842);
 
       ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#10b981';
@@ -452,7 +452,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
   const handleShare = async () => {
     if (!imageUrl || !game) return;
     const winner = [...game.players].sort((a, b) => b.totalScore - a.totalScore)[0];
-    const shareText = `🔥 GUA LAGI AJE RANGER MERAHNYEEEE! 🔥\nSelamat kepada ${winner?.name || 'Juara 1'} memenangkan game Ceki!\n\nSkor: ${winner?.totalScore} poin\ncekiindongbang.vercel.app`;
+    const shareText = `🔥 GUA LAGI AJE RANGER MERAHNYEEEE! 🔥\nSelamat kepada ${winner?.name || 'Juara 1'} memenangkan game KOCOK KEKAR!\n\nSkor: ${winner?.totalScore} poin\ncekiindongbang.vercel.app`;
     const ratioSlug = aspectRatio.replace(':', 'x');
 
     try {
