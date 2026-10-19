@@ -16,6 +16,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { Avatar } from '@/components/ui/Avatar';
 import { PlayerModal } from '@/components/player/PlayerModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { PinLockModal } from '@/components/ui/PinLockModal';
 import { SCORE_LIMIT_PRESETS, QUICK_VALUE_PRESETS } from '@/lib/constants';
 import { Plus, Check, Play, AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -46,6 +47,7 @@ export default function NewGamePage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [activeGameConflict, setActiveGameConflict] = useState(false);
 
   // Toggle seleksi pemain (maksimal 4)
@@ -189,7 +191,7 @@ export default function NewGamePage() {
 
           <button
             type="button"
-            onClick={() => setIsPlayerModalOpen(true)}
+            onClick={() => setIsPinModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all"
           >
             <Plus size={14} />
@@ -211,7 +213,7 @@ export default function NewGamePage() {
             </p>
             <button
               type="button"
-              onClick={() => setIsPlayerModalOpen(true)}
+              onClick={() => setIsPinModalOpen(true)}
               className="btn-primary py-2 px-4 text-xs font-bold"
             >
               Tambah Pemain Sekarang
@@ -498,6 +500,18 @@ export default function NewGamePage() {
         confirmText="Buang Game Lama & Mulai Baru"
         cancelText="Batal"
         isDanger
+      />
+
+      {/* Modal Kunci Keamanan PIN Tambah Pemain */}
+      <PinLockModal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+        onSuccess={() => {
+          setIsPinModalOpen(false);
+          setIsPlayerModalOpen(true);
+        }}
+        title="HEH MAO DIAPAIN SI!"
+        description="Fitur tambah pemain terkunci! Masukkan kode PIN untuk melanjutkan."
       />
     </div>
   );

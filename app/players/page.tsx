@@ -15,6 +15,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { PlayerModal } from '@/components/player/PlayerModal';
 import { PhotoCropModal } from '@/components/player/PhotoCropModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { PinLockModal } from '@/components/ui/PinLockModal';
 import { Plus, Edit2, Trash2, Camera, Archive, CheckCircle2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +38,7 @@ export default function PlayersPage() {
   // State Modal
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<PlayerItem | null>(null);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [photoPlayer, setPhotoPlayer] = useState<PlayerItem | null>(null);
@@ -49,6 +51,11 @@ export default function PlayersPage() {
   );
 
   const handleOpenAdd = () => {
+    setIsPinModalOpen(true);
+  };
+
+  const handlePinSuccess = () => {
+    setIsPinModalOpen(false);
     setEditingPlayer(null);
     setIsPlayerModalOpen(true);
   };
@@ -316,6 +323,15 @@ export default function PlayersPage() {
         }
         confirmText="Hapus"
         isDanger
+      />
+
+      {/* Modal Kunci Keamanan PIN Tambah Pemain */}
+      <PinLockModal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+        onSuccess={handlePinSuccess}
+        title="HEH MAO DIAPAIN SI!"
+        description="Fitur tambah pemain terkunci! Masukkan kode PIN untuk melanjutkan."
       />
     </div>
   );

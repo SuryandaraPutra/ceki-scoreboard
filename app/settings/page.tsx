@@ -30,11 +30,26 @@ import {
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { PinLockModal } from '@/components/ui/PinLockModal';
+import { Lock } from 'lucide-react';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { settings, isLoading, updateSettings } = useSettings();
+
+  // Kunci Keamanan PIN (Wajib 6666)
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+
+  useEffect(() => {
+    const savedPin = sessionStorage.getItem('ceki_settings_unlocked');
+    if (savedPin === '6666') {
+      setIsUnlocked(true);
+    } else {
+      setIsPinModalOpen(true);
+    }
+  }, []);
 
   // Form State
   const [defaultInitialScore, setDefaultInitialScore] = useState<number>(0);
@@ -166,6 +181,42 @@ export default function SettingsPage() {
       toast.error('Gagal keluar');
     }
   };
+
+  if (!isUnlocked) {
+    return (
+      <div className="max-w-md mx-auto my-12 glass-card p-8 text-center flex flex-col items-center animate-fade-in">
+        <div className="w-16 h-16 rounded-3xl bg-rose-100 dark:bg-rose-950/60 text-rose-500 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center mb-4 shadow-xl shadow-rose-500/20">
+          <Lock size={32} className="animate-pulse" />
+        </div>
+        <h2 className="text-xl font-black text-rose-600 dark:text-rose-400">
+          HEH MAO DIAPAIN SI!
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 mb-6 max-w-xs">
+          Menu Pengaturan & Cadangan Data terkunci. Masukkan kode PIN untuk mengakses konfigurasi.
+        </p>
+        <button
+          type="button"
+          onClick={() => setIsPinModalOpen(true)}
+          className="btn-primary py-3 px-6 text-xs sm:text-sm font-bold flex items-center gap-2"
+        >
+          <Lock size={16} />
+          <span>Buka Kunci Pengaturan (PIN)</span>
+        </button>
+
+        <PinLockModal
+          isOpen={isPinModalOpen}
+          onClose={() => setIsPinModalOpen(false)}
+          onSuccess={() => {
+            setIsUnlocked(true);
+            sessionStorage.setItem('ceki_settings_unlocked', '6666');
+            setIsPinModalOpen(false);
+          }}
+          title="HEH MAO DIAPAIN SI!"
+          description="Fitur pengaturan terkunci! Masukkan kode PIN untuk mengakses."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-6 animate-fade-in pb-16">
