@@ -3,7 +3,7 @@
  * Dipanggil dari API /api/settings.
  */
 
-import { db } from './db';
+import { db, ensureDbSchema } from './db';
 import { settings } from './schema';
 
 /** Nilai default settings */
@@ -22,22 +22,41 @@ export const DEFAULT_SETTINGS = {
 
 /**
  * Ambil settings dari database.
- * Jika belum ada baris settings, buat dengan nilai default.
+ * Jika tabel belum ada di Turso, otomatis buat skema tabelnya!
  */
 export async function getOrCreateSettings() {
-  const existing = await db.select().from(settings).limit(1);
+  try {
+    const existing = await db.select().from(settings).limit(1);
 
-  if (existing.length > 0) {
-    return existing[0];
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    // Buat settings default
+    const [created] = await db
+      .insert(settings)
+      .values(DEFAULT_SETTINGS)
+      .returning();
+
+    return created;
+  } catch (error: any) {
+    // Jika tabel belum ada, buat semua tabel secara otomatis!
+    if (
+      error?.message?.includes('no such table') ||
+      error?.code === 'SQLITE_ERROR' ||
+      error?.message?.includes('does not exist')
+    ) {
+      await ensureDbSchema();
+      const existing = await db.select().from(settings).limit(1);
+      if (existing.length > 0) return existing[0];
+      const [created] = await db
+        .insert(settings)
+        .values(DEFAULT_SETTINGS)
+        .returning();
+      return created;
+    }
+    throw error;
   }
-
-  // Buat settings default
-  const [created] = await db
-    .insert(settings)
-    .values(DEFAULT_SETTINGS)
-    .returning();
-
-  return created;
 }
 
 /**

@@ -1,0 +1,37 @@
+/**
+ * API Route: /api/setup
+ * GET: Inisialisasi otomatis semua tabel database di Turso/SQLite
+ *      Menjalankan CREATE TABLE IF NOT EXISTS untuk seluruh skema
+ */
+
+import { NextResponse } from 'next/server';
+import { ensureDbSchema } from '@/lib/db';
+import { getOrCreateSettings } from '@/lib/settings';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+export async function GET() {
+  try {
+    // 1. Eksekusi pembuatan seluruh tabel jika belum ada
+    await ensureDbSchema();
+
+    // 2. Buat baris settings default jika belum ada
+    const defaultSettings = await getOrCreateSettings();
+
+    return NextResponse.json({
+      success: true,
+      message: '✅ Semua tabel database Ceki Scoreboard berhasil diinisialisasi di Turso!',
+      settings: defaultSettings,
+    });
+  } catch (error: any) {
+    console.error('Error in /api/setup:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || 'Gagal menginisialisasi database',
+      },
+      { status: 500 }
+    );
+  }
+}

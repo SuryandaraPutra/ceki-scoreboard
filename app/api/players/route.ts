@@ -42,7 +42,20 @@ export async function GET(req: NextRequest) {
       : result.filter((p) => p.archivedAt === null);
 
     return NextResponse.json({ data: filtered });
-  } catch (error) {
+  } catch (error: any) {
+    if (
+      error?.message?.includes('no such table') ||
+      error?.code === 'SQLITE_ERROR' ||
+      error?.message?.includes('does not exist')
+    ) {
+      try {
+        const { ensureDbSchema } = await import('@/lib/db');
+        await ensureDbSchema();
+        return NextResponse.json({ data: [] });
+      } catch (initErr) {
+        console.error('Failed to auto-init schema in GET /api/players:', initErr);
+      }
+    }
     console.error('Error in GET /api/players:', error);
     return makeError('INTERNAL_ERROR', 'Gagal memuat daftar pemain', 500);
   }
@@ -122,7 +135,19 @@ export async function POST(req: NextRequest) {
       });
 
     return NextResponse.json({ data: created }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
+    if (
+      error?.message?.includes('no such table') ||
+      error?.code === 'SQLITE_ERROR' ||
+      error?.message?.includes('does not exist')
+    ) {
+      try {
+        const { ensureDbSchema } = await import('@/lib/db');
+        await ensureDbSchema();
+      } catch (initErr) {
+        console.error('Failed to auto-init schema in POST /api/players:', initErr);
+      }
+    }
     console.error('Error in POST /api/players:', error);
     return makeError('INTERNAL_ERROR', 'Gagal menambahkan pemain', 500);
   }
