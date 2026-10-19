@@ -236,14 +236,15 @@ select {
    Modal overlay
    ───────────────────────────────────────────── */
 .modal-overlay {
-  @apply fixed inset-0 z-[100] flex items-center justify-center p-4 pb-24 sm:p-6 sm:pb-6 overflow-y-auto;
+  @apply fixed inset-0 z-[100] flex items-start justify-center p-3.5 sm:p-6 overflow-y-auto;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  @apply glass-card w-full sm:max-w-lg mx-auto p-6 rounded-3xl shadow-2xl my-auto;
-  animation: slideUp 0.3s ease-out;
+  @apply glass-card w-full sm:max-w-lg mx-auto p-6 rounded-3xl shadow-2xl;
+  animation: notificationDrop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ─────────────────────────────────────────────
@@ -273,6 +274,11 @@ select {
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
+}
+
+@keyframes notificationDrop {
+  from { transform: translateY(-48px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
 }
 
 @keyframes slideUp {
