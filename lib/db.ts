@@ -28,8 +28,12 @@ declare global {
  * Di lokal, buat file SQLite di ./data/ceki.db.
  */
 function createDbConnection() {
-  const tursoUrl = process.env.TURSO_DATABASE_URL;
-  const tursoToken = process.env.TURSO_AUTH_TOKEN;
+  const tursoUrl =
+    process.env.TURSO_DATABASE_URL ||
+    process.env.TURSO_DB_URL ||
+    process.env.DATABASE_URL;
+  const tursoToken =
+    process.env.TURSO_AUTH_TOKEN || process.env.TURSO_DB_AUTH_TOKEN;
 
   if (tursoUrl && tursoUrl.length > 0) {
     // --- Mode Produksi: Turso ---
