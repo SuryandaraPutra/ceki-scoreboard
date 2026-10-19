@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     title: 'KOCOK KEKAR',
   },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/icons/icon-192.png',
+    icon: '/logo.png',
+    apple: '/logo.png',
   },
 };
 

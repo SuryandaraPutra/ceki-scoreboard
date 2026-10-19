@@ -9,7 +9,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from '../ui/ThemeToggle';
-import { Gamepad2, Users, Trophy, History, Settings, Sparkles } from 'lucide-react';
+import { Gamepad2, Users, Trophy, History, Settings } from 'lucide-react';
 
 export function AppNavbar() {
   const pathname = usePathname();
@@ -27,8 +27,12 @@ export function AppNavbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Logo & Judul */}
         <Link href="/" className="flex items-center gap-2.5 group select-none">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-            <Sparkles size={20} className="animate-spin-slow" />
+          <div className="relative w-10 h-10 rounded-2xl overflow-hidden shadow-md shadow-emerald-500/20 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300 border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800 shrink-0 flex items-center justify-center p-0.5">
+            <img
+              src="/logo.png"
+              alt="Logo KOCOK KEKAR"
+              className="w-full h-full object-contain rounded-xl"
+            />
           </div>
           <div className="flex flex-col">
             <span className="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 dark:from-emerald-400 dark:via-teal-400 dark:to-sky-400 bg-clip-text text-transparent">
