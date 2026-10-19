@@ -24,6 +24,7 @@ import { RoundHistoryTable } from '@/components/game/RoundHistoryTable';
 import { ScoreLimitModal } from '@/components/game/ScoreLimitModal';
 import { GameWinnerModal } from '@/components/game/GameWinnerModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { InteractiveCekiCards } from '@/components/home/InteractiveCekiCards';
 import {
   Play,
   Flag,
@@ -237,10 +238,8 @@ export default function HomePage() {
   if (!isLoading && !game) {
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center text-center gap-6 py-8 sm:py-16 animate-fade-in">
-        {/* Banner Hero */}
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center shadow-2xl shadow-emerald-500/30 animate-bounce-soft">
-          <Play size={36} fill="currentColor" className="ml-1" />
-        </div>
+        {/* Kartu Ceki Interaktif (Sentuh & Goyang) */}
+        <InteractiveCekiCards />
 
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
