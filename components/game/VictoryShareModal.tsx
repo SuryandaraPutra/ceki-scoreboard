@@ -1,8 +1,10 @@
 'use client';
 
 /**
- * Modal Berbagi Gambar Kemenangan Juara 1 (Format 4:3 PNG):
- * - Menghasilkan gambar grafis resolusi tinggi 1200x900 (aspek rasio 4:3)
+ * Modal Berbagi Gambar Kemenangan Juara 1 (Pilihan Format 4:3 & 16:9 PNG):
+ * - Menghasilkan gambar grafis resolusi tinggi:
+ *   - 4:3  -> 1200 x 900 px (Format album foto / Instagram feed)
+ *   - 16:9 -> 1600 x 900 px (Format widescreen / wallpaper / landscape story)
  * - Tampilan kemenangan Juara 1 dengan kutipan: "GUA LAGI AJE RANGER MERAHNYEEEE"
  * - Ringkasan papan skor 4 pemain
  * - Tombol "Simpan ke Album Foto (Download PNG)" & "Bagikan Gambar (Web Share API)"
@@ -12,7 +14,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Modal } from '../ui/Modal';
 import { formatDate } from '@/lib/constants';
 import { getInitials } from '@/lib/calc';
-import { Download, Share2, Sparkles, Check, Image as ImageIcon } from 'lucide-react';
+import { Download, Share2, Check, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PlayerInfo {
@@ -70,24 +72,29 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<'4:3' | '16:9'>('4:3');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Render Canvas Grafis 1200x900 (4:3)
+  // Render Canvas Grafis dengan Aspek Rasio Pilihan (4:3 atau 16:9)
   const generateVictoryImage = useCallback(async () => {
     if (!game || !game.players || game.players.length === 0) return;
     setIsGenerating(true);
 
     try {
-      // Buat canvas off-screen atau gunakan canvas ref
       const canvas = canvasRef.current || document.createElement('canvas');
-      canvas.width = 1200;
-      canvas.height = 900;
+      const isWidescreen = aspectRatio === '16:9';
+      const W = isWidescreen ? 1600 : 1200;
+      const H = 900;
+      canvas.width = W;
+      canvas.height = H;
+      const cx = W / 2;
+
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // Urutkan pemain berdasarkan skor tertinggi
+      // Urutkan pemain berdasarkan rank / skor tertinggi
       const sortedPlayers = [...game.players].sort((a, b) => {
         if (a.rank && b.rank) return a.rank - b.rank;
         return b.totalScore - a.totalScore;
@@ -101,23 +108,29 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       // 1. LATAR BELAKANG (Gaming Dark Slate + Aura Red Ranger)
       // ─────────────────────────────────────────────
       ctx.fillStyle = '#090d16';
-      ctx.fillRect(0, 0, 1200, 900);
+      ctx.fillRect(0, 0, W, H);
 
       // Radial Glow merah membara (Ranger Merah)
-      const aura = ctx.createRadialGradient(600, 340, 40, 600, 340, 520);
+      const aura = ctx.createRadialGradient(cx, 340, 40, cx, 340, W * 0.45);
       aura.addColorStop(0, 'rgba(239, 68, 68, 0.45)');
       aura.addColorStop(0.4, 'rgba(185, 28, 28, 0.22)');
       aura.addColorStop(0.8, 'rgba(15, 23, 42, 0.1)');
       aura.addColorStop(1, 'rgba(9, 13, 22, 0)');
       ctx.fillStyle = aura;
-      ctx.fillRect(0, 0, 1200, 900);
+      ctx.fillRect(0, 0, W, H);
 
-      // Partikel kilau bintang acak halus di latar
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-      const starSeeds = [
-        [150, 120, 2], [280, 240, 3], [1050, 140, 2.5], [920, 260, 2],
-        [180, 520, 3], [1020, 540, 2.5], [320, 780, 2], [880, 790, 2.5]
-      ];
+      // Partikel kilau bintang
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+      const starSeeds = isWidescreen
+        ? [
+            [120, 140, 2], [220, 260, 3], [360, 150, 2.5], [1480, 160, 2.5], [1360, 280, 3],
+            [1240, 130, 2], [140, 520, 3], [260, 680, 2.5], [1460, 540, 2.5], [1320, 720, 3]
+          ]
+        : [
+            [150, 120, 2], [280, 240, 3], [1050, 140, 2.5], [920, 260, 2],
+            [180, 520, 3], [1020, 540, 2.5], [320, 780, 2], [880, 790, 2.5]
+          ];
+
       starSeeds.forEach(([x, y, r]) => {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -125,7 +138,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       });
 
       // Frame Border Luar Gradasi Emas-Merah
-      const borderGrad = ctx.createLinearGradient(0, 0, 1200, 900);
+      const borderGrad = ctx.createLinearGradient(0, 0, W, H);
       borderGrad.addColorStop(0, '#ef4444');
       borderGrad.addColorStop(0.5, '#f59e0b');
       borderGrad.addColorStop(1, '#dc2626');
@@ -133,7 +146,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.save();
       ctx.lineWidth = 4;
       ctx.strokeStyle = borderGrad;
-      drawRoundedRect(ctx, 24, 24, 1152, 852, 32);
+      drawRoundedRect(ctx, 24, 24, W - 48, H - 48, 32);
       ctx.stroke();
       ctx.restore();
 
@@ -143,7 +156,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       // Pill Label Ceki Scoreboard
       ctx.save();
       const pillWidth = 430;
-      const pillX = (1200 - pillWidth) / 2;
+      const pillX = (W - pillWidth) / 2;
       ctx.fillStyle = 'rgba(239, 68, 68, 0.18)';
       drawRoundedRect(ctx, pillX, 55, pillWidth, 38, 19);
       ctx.fill();
@@ -154,7 +167,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#fca5a5';
       ctx.textAlign = 'center';
-      ctx.fillText('⚡ CEKI SCOREBOARD • OFFICIAL MATCH RESULT ⚡', 600, 79);
+      ctx.fillText('⚡ CEKI SCOREBOARD • OFFICIAL MATCH RESULT ⚡', cx, 79);
       ctx.restore();
 
       // Info Game & Tanggal
@@ -162,7 +175,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.fillStyle = '#94a3b8';
       ctx.textAlign = 'center';
       const gameTitle = game.name ? `"${game.name}"` : `Game #${game.id}`;
-      ctx.fillText(`${gameTitle}  •  ${roundsCount} Round  •  ${dateText}`, 600, 122);
+      ctx.fillText(`${gameTitle}  •  ${roundsCount} Round  •  ${dateText}`, cx, 122);
 
       // ─────────────────────────────────────────────
       // 3. THE EPIC QUOTE: "GUA LAGI AJE RANGER MERAHNYEEEE"
@@ -173,34 +186,34 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
 
       // 3D Shadow bawah teks
       ctx.fillStyle = '#450a0a';
-      ctx.fillText('GUA LAGI AJE RANGER MERAHNYEEEE', 600, 187);
+      ctx.fillText('GUA LAGI AJE RANGER MERAHNYEEEE', cx, 187);
 
       // Gradasi Teks Utama Merah Api ke Kuning Emas
-      const quoteGrad = ctx.createLinearGradient(200, 0, 1000, 0);
+      const quoteGrad = ctx.createLinearGradient(cx - 400, 0, cx + 400, 0);
       quoteGrad.addColorStop(0, '#ff4343');
       quoteGrad.addColorStop(0.4, '#ff7a3d');
       quoteGrad.addColorStop(0.7, '#ffb82e');
       quoteGrad.addColorStop(1, '#ff3b3b');
 
       ctx.fillStyle = quoteGrad;
-      ctx.fillText('GUA LAGI AJE RANGER MERAHNYEEEE', 600, 184);
+      ctx.fillText('GUA LAGI AJE RANGER MERAHNYEEEE', cx, 184);
 
       // Garis tepi tipis bersinar
       ctx.lineWidth = 2;
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.strokeText('GUA LAGI AJE RANGER MERAHNYEEEE', 600, 184);
+      ctx.strokeText('GUA LAGI AJE RANGER MERAHNYEEEE', cx, 184);
       ctx.restore();
 
       // Sub-heading Hype
       ctx.font = '800 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#fbbf24';
       ctx.textAlign = 'center';
-      ctx.fillText('👑 SANG JUARA 1 & PENGUASA MEJA CEKI HARI INI 👑', 600, 222);
+      ctx.fillText('👑 SANG JUARA 1 & PENGUASA MEJA CEKI HARI INI 👑', cx, 222);
 
       // ─────────────────────────────────────────────
       // 4. SPOTLIGHT JUARA 1 (CROWN, AVATAR & NAMA)
       // ─────────────────────────────────────────────
-      const avatarCenterX = 600;
+      const avatarCenterX = cx;
       const avatarCenterY = 360;
       const avatarRadius = 82;
 
@@ -256,7 +269,6 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       }
 
       if (!photoDrawn) {
-        // Gambar lingkaran avatar berbasis warna pemain + inisial
         ctx.save();
         ctx.beginPath();
         ctx.arc(avatarCenterX, avatarCenterY, avatarRadius, 0, Math.PI * 2);
@@ -278,14 +290,14 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.textAlign = 'center';
       ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
       ctx.shadowBlur = 12;
-      ctx.fillText(winner.name, 600, 485);
+      ctx.fillText(winner.name, cx, 485);
       ctx.restore();
 
       // Skor Juara 1 Badge Pill
       ctx.save();
       const scoreBadgeW = 290;
       const scoreBadgeH = 46;
-      const scoreBadgeX = (1200 - scoreBadgeW) / 2;
+      const scoreBadgeX = (W - scoreBadgeW) / 2;
       const scoreBadgeY = 508;
 
       const scoreBadgeGrad = ctx.createLinearGradient(scoreBadgeX, 0, scoreBadgeX + scoreBadgeW, 0);
@@ -304,7 +316,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       const scorePrefix = winner.totalScore > 0 ? '+' : '';
-      ctx.fillText(`TOTAL SKOR: ${scorePrefix}${winner.totalScore} POIN`, 600, 539);
+      ctx.fillText(`TOTAL SKOR: ${scorePrefix}${winner.totalScore} POIN`, cx, 539);
       ctx.restore();
 
       // ─────────────────────────────────────────────
@@ -313,14 +325,14 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#94a3b8';
       ctx.textAlign = 'center';
-      ctx.fillText('🏆 KLASEMEN AKHIR PERTANDINGAN', 600, 600);
+      ctx.fillText('🏆 KLASEMEN AKHIR PERTANDINGAN', cx, 600);
 
       const medals = ['🥇 Juara 1', '🥈 Juara 2', '🥉 Juara 3', '4️⃣ Posisi 4'];
-      const cardW = 255;
+      const cardW = isWidescreen ? 340 : 255;
       const cardH = 150;
-      const cardGap = 24;
+      const cardGap = isWidescreen ? 28 : 24;
       const totalCardsW = 4 * cardW + 3 * cardGap;
-      const startCardX = (1200 - totalCardsW) / 2;
+      const startCardX = (W - totalCardsW) / 2;
       const cardY = 620;
 
       sortedPlayers.forEach((p, idx) => {
@@ -354,8 +366,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
         ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillStyle = '#f8fafc';
         ctx.textAlign = 'left';
-        // Truncate nama jika terlalu panjang
-        const maxNameLen = 11;
+        const maxNameLen = isWidescreen ? 16 : 11;
         const displayName = p.name.length > maxNameLen ? p.name.slice(0, maxNameLen) + '…' : p.name;
         ctx.fillText(displayName, x + 54, dotY + 6);
 
@@ -383,7 +394,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(60, 810);
-      ctx.lineTo(1140, 810);
+      ctx.lineTo(W - 60, 810);
       ctx.stroke();
 
       ctx.font = '500 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -394,7 +405,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillStyle = '#10b981';
       ctx.textAlign = 'right';
-      ctx.fillText('cekiindongbang.vercel.app', 1140, 842);
+      ctx.fillText('cekiindongbang.vercel.app', W - 60, 842);
       ctx.restore();
 
       // Selesai! Simpan data URL
@@ -405,7 +416,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
     } finally {
       setIsGenerating(false);
     }
-  }, [game]);
+  }, [game, aspectRatio]);
 
   useEffect(() => {
     if (isOpen && game) {
@@ -421,7 +432,8 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
     try {
       const winner = [...game.players].sort((a, b) => b.totalScore - a.totalScore)[0];
       const safeWinnerName = winner ? winner.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'juara';
-      const filename = `ceki-ranger-merah-${safeWinnerName}-game-${game.id}.png`;
+      const ratioSlug = aspectRatio.replace(':', 'x');
+      const filename = `ceki-ranger-merah-${safeWinnerName}-game-${game.id}-${ratioSlug}.png`;
 
       const link = document.createElement('a');
       link.href = imageUrl;
@@ -430,7 +442,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       link.click();
       document.body.removeChild(link);
 
-      toast.success('Gambar PNG 4:3 berhasil diunduh ke galeri/penyimpanan!');
+      toast.success(`Gambar PNG (${aspectRatio}) berhasil disimpan ke galeri/penyimpanan!`);
     } catch {
       toast.error('Gagal mengunduh gambar');
     }
@@ -441,12 +453,12 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
     if (!imageUrl || !game) return;
     const winner = [...game.players].sort((a, b) => b.totalScore - a.totalScore)[0];
     const shareText = `🔥 GUA LAGI AJE RANGER MERAHNYEEEE! 🔥\nSelamat kepada ${winner?.name || 'Juara 1'} memenangkan game Ceki!\n\nSkor: ${winner?.totalScore} poin\ncekiindongbang.vercel.app`;
+    const ratioSlug = aspectRatio.replace(':', 'x');
 
     try {
-      // Ubah dataURL ke Blob file
       const res = await fetch(imageUrl);
       const blob = await res.blob();
-      const file = new File([blob], `ceki-ranger-merah-${game.id}.png`, { type: 'image/png' });
+      const file = new File([blob], `ceki-ranger-merah-${game.id}-${ratioSlug}.png`, { type: 'image/png' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -456,7 +468,6 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
         });
         toast.success('Berhasil membuka menu share gambar!');
       } else {
-        // Fallback: download otomatis dan copy caption
         handleDownload();
         await navigator.clipboard.writeText(shareText);
         setCopied(true);
@@ -474,26 +485,61 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="🔥 Kartu Kemenangan 4:3 (PNG)"
-      description="Siap disimpan ke album foto atau dibagikan ke teman"
+      title="🔥 Kartu Kemenangan Ranger Merah (PNG)"
+      description={`Format ${aspectRatio} • Siap disimpan ke album foto atau dibagikan`}
       maxWidth="lg"
     >
-      <div className="flex flex-col gap-4 mt-2">
+      <div className="flex flex-col gap-3.5 mt-2">
         {/* Hidden Canvas untuk Rendering Resolusi Tinggi */}
         <canvas ref={canvasRef} className="hidden" />
 
-        {/* Preview Gambar 4:3 */}
-        <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/80 shadow-2xl flex items-center justify-center">
+        {/* Pilihan Ukuran Rasio: 4:3 vs 16:9 */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-100 dark:bg-slate-800/80 p-2 rounded-2xl border border-slate-200 dark:border-slate-700 gap-2">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 pl-1">
+            Pilih Ukuran Gambar:
+          </span>
+          <div className="flex items-center gap-1.5 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setAspectRatio('4:3')}
+              className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                aspectRatio === '4:3'
+                  ? 'bg-rose-500 text-white shadow-md shadow-rose-500/25'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 bg-white/60 dark:bg-slate-700/60 sm:bg-transparent'
+              }`}
+            >
+              4:3 (Album / Feed)
+            </button>
+            <button
+              type="button"
+              onClick={() => setAspectRatio('16:9')}
+              className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                aspectRatio === '16:9'
+                  ? 'bg-rose-500 text-white shadow-md shadow-rose-500/25'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 bg-white/60 dark:bg-slate-700/60 sm:bg-transparent'
+              }`}
+            >
+              16:9 (Widescreen)
+            </button>
+          </div>
+        </div>
+
+        {/* Preview Gambar dengan Aspek Rasio Dinamis */}
+        <div
+          className={`relative w-full ${
+            aspectRatio === '16:9' ? 'aspect-[16/9]' : 'aspect-[4/3]'
+          } rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/80 shadow-2xl flex items-center justify-center transition-all duration-300`}
+        >
           {isGenerating ? (
             <div className="flex flex-col items-center gap-3 text-slate-400">
-              <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs font-semibold">Meracik Kartu Ranger Merah 4:3...</span>
+              <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs font-semibold">Meracik Kartu Ranger Merah ({aspectRatio})...</span>
             </div>
           ) : imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imageUrl}
-              alt="Kartu Kemenangan Ranger Merah 4:3"
+              alt={`Kartu Kemenangan Ranger Merah ${aspectRatio}`}
               className="w-full h-full object-contain"
             />
           ) : (
@@ -503,15 +549,15 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
             </div>
           )}
 
-          {/* Badge Format 4:3 di sudut */}
+          {/* Badge Format di sudut */}
           <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-slate-700/60 text-[10px] font-black text-amber-400 tracking-wider">
-            FORMAT 4:3 (1200×900)
+            {aspectRatio === '16:9' ? 'FORMAT 16:9 (1600×900)' : 'FORMAT 4:3 (1200×900)'}
           </div>
         </div>
 
         {/* Petunjuk Mobile */}
-        <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center -mt-1">
-          💡 <strong>Tips di HP:</strong> Anda juga bisa tekan & tahan (long-press) gambar di atas untuk langsung <em>&ldquo;Simpan Gambar ke Foto&rdquo;</em>.
+        <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center -mt-0.5">
+          💡 <strong>Tips di HP:</strong> Tekan & tahan (long-press) gambar di atas untuk langsung <em>&ldquo;Simpan Gambar ke Foto&rdquo;</em>.
         </p>
 
         {/* Tombol Aksi */}
@@ -522,8 +568,8 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
             disabled={!imageUrl || isGenerating}
             className="btn-secondary py-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
           >
-            <Download size={18} className="text-emerald-500" />
-            <span>Simpan ke Album (PNG)</span>
+            <Download size={18} className="text-rose-500" />
+            <span>Simpan PNG ({aspectRatio})</span>
           </button>
 
           <button
