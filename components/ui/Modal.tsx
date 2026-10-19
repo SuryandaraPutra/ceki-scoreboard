@@ -18,10 +18,10 @@ interface ModalProps {
 }
 
 const maxWidthMap = {
-  sm: 'sm:max-w-sm',
-  md: 'sm:max-w-md',
-  lg: 'sm:max-w-lg',
-  xl: 'sm:max-w-xl',
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-xl',
 };
 
 export function Modal({
@@ -43,10 +43,21 @@ export function Modal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Kunci scroll body saat modal terbuka agar background dashboard tetap rapi
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pb-24 sm:p-6 sm:pb-6 overflow-y-auto">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -58,11 +69,11 @@ export function Modal({
 
           {/* Modal Card */}
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.95 }}
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.95 }}
+            exit={{ opacity: 0, y: 16, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`relative w-full ${maxWidthMap[maxWidth]} bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 z-10 max-h-[90vh] overflow-y-auto`}
+            className={`relative w-full ${maxWidthMap[maxWidth]} bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-5 sm:p-6 z-10 max-h-[82vh] sm:max-h-[85vh] overflow-y-auto my-auto`}
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-4">

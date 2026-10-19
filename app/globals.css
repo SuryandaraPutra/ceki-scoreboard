@@ -236,13 +236,13 @@ select {
    Modal overlay
    ───────────────────────────────────────────── */
 .modal-overlay {
-  @apply fixed inset-0 z-50 flex items-end sm:items-center justify-center;
-  background: rgba(0, 0, 0, 0.5);
+  @apply fixed inset-0 z-[100] flex items-center justify-center p-4 pb-24 sm:p-6 sm:pb-6 overflow-y-auto;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  @apply glass-card w-full sm:max-w-lg mx-4 mb-4 sm:mb-0 p-6;
+  @apply glass-card w-full sm:max-w-lg mx-auto p-6 rounded-3xl shadow-2xl my-auto;
   animation: slideUp 0.3s ease-out;
 }
 
