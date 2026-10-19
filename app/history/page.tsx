@@ -13,8 +13,9 @@ import useSWR from 'swr';
 import { Avatar } from '@/components/ui/Avatar';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { VictoryShareModal } from '@/components/game/VictoryShareModal';
 import { formatDate, formatDateTime } from '@/lib/constants';
-import { History, Eye, Trash2, Calendar, Trophy, ChevronRight } from 'lucide-react';
+import { History, Eye, Trash2, Calendar, Trophy, ChevronRight, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -25,6 +26,7 @@ export default function HistoryPage() {
 
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [deleteTargetGame, setDeleteTargetGame] = useState<{ id: number; name: string | null } | null>(null);
+  const [shareTargetGame, setShareTargetGame] = useState<any | null>(null);
 
   // Ambil detail game yang dipilih untuk modal
   const { data: detailData, isLoading: isDetailLoading } = useSWR(
@@ -152,6 +154,14 @@ export default function HistoryPage() {
                 >
                   <button
                     type="button"
+                    onClick={() => setShareTargetGame(game)}
+                    className="p-2.5 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    title="Bagikan Kartu 4:3 (Ranger Merah)"
+                  >
+                    <Share2 size={18} />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setSelectedGameId(game.id)}
                     className="p-2.5 rounded-xl text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     title="Lihat Detail Round"
@@ -259,7 +269,15 @@ export default function HistoryPage() {
               </table>
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShareTargetGame(selectedGame)}
+                className="btn-primary py-2 px-4 text-xs font-bold flex items-center gap-1.5"
+              >
+                <Share2 size={15} />
+                <span>Bagikan Kartu 4:3 (PNG)</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setSelectedGameId(null)}
@@ -283,6 +301,13 @@ export default function HistoryPage() {
         } beserta seluruh round dan skornya akan dihapus permanen.`}
         confirmText="Hapus Permanen"
         isDanger
+      />
+
+      {/* MODAL BERBAGI KARTU KEMENANGAN 4:3 (PNG) */}
+      <VictoryShareModal
+        isOpen={Boolean(shareTargetGame)}
+        onClose={() => setShareTargetGame(null)}
+        game={shareTargetGame}
       />
     </div>
   );
