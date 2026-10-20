@@ -16,6 +16,7 @@ import { PlayerModal } from '@/components/player/PlayerModal';
 import { PhotoCropModal } from '@/components/player/PhotoCropModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PinLockModal } from '@/components/ui/PinLockModal';
+import { StaggerChild } from '@/components/layout/PageTransition';
 import { Plus, Edit2, Trash2, Camera, Archive, CheckCircle2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -183,11 +184,11 @@ export default function PlayersPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayedPlayers.map((player) => {
+          {displayedPlayers.map((player, idx) => {
             const isArchived = player.archivedAt !== null;
             return (
+              <StaggerChild key={player.id} index={idx}>
               <div
-                key={player.id}
                 className={`glass-card p-4 sm:p-5 flex items-center justify-between gap-3 transition-all ${
                   isArchived ? 'opacity-65 bg-slate-100/50 dark:bg-slate-900/40' : ''
                 }`}
@@ -276,6 +277,7 @@ export default function PlayersPage() {
                   )}
                 </div>
               </div>
+              </StaggerChild>
             );
           })}
         </div>

@@ -3,23 +3,27 @@
 /**
  * Navigasi Atas (Navbar) untuk Tablet dan Desktop,
  * serta header ringkas di HP.
+ * - Indikator aktif berupa underline/pil yang bergerak (layoutId).
+ * - prefers-reduced-motion: langsung tampil tanpa animasi gerak.
  */
 
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { Gamepad2, Users, Trophy, History, Settings } from 'lucide-react';
 
 export function AppNavbar() {
   const pathname = usePathname();
+  const prefersReducedMotion = useReducedMotion() ?? false;
 
   const links = [
-    { label: 'Game', href: '/', icon: Gamepad2, isActive: pathname === '/' || pathname.startsWith('/game') },
-    { label: 'Pemain', href: '/players', icon: Users, isActive: pathname.startsWith('/players') },
-    { label: 'Leaderboard', href: '/leaderboard', icon: Trophy, isActive: pathname.startsWith('/leaderboard') },
-    { label: 'Riwayat', href: '/history', icon: History, isActive: pathname.startsWith('/history') },
-    { label: 'Pengaturan', href: '/settings', icon: Settings, isActive: pathname.startsWith('/settings') },
+    { label: 'Game',        href: '/',            icon: Gamepad2, isActive: pathname === '/' || pathname.startsWith('/game') },
+    { label: 'Pemain',      href: '/players',     icon: Users,    isActive: pathname.startsWith('/players') },
+    { label: 'Leaderboard', href: '/leaderboard', icon: Trophy,   isActive: pathname.startsWith('/leaderboard') },
+    { label: 'Riwayat',     href: '/history',     icon: History,  isActive: pathname.startsWith('/history') },
+    { label: 'Pengaturan',  href: '/settings',    icon: Settings, isActive: pathname.startsWith('/settings') },
   ];
 
   return (
@@ -44,7 +48,7 @@ export function AppNavbar() {
           </div>
         </Link>
 
-        {/* Links untuk Desktop & Tablet */}
+        {/* Links untuk Desktop & Tablet dengan animated active indicator */}
         <nav className="hidden sm:flex items-center gap-1">
           {links.map((link) => {
             const Icon = link.icon;
@@ -52,12 +56,30 @@ export function AppNavbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all ${
+                className={`relative flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold transition-colors duration-150 ${
                   link.isActive
-                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-200/50 dark:border-emerald-800/50'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/60 dark:hover:bg-slate-800/60'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
+                {/* Background pil aktif — bergerak mulus antar link */}
+                {link.isActive && (
+                  <motion.div
+                    layoutId="navbar-pill"
+                    className="absolute inset-0 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/50 dark:border-emerald-800/50 shadow-sm"
+                    style={{ zIndex: -1 }}
+                    transition={
+                      prefersReducedMotion
+                        ? { duration: 0 }
+                        : {
+                            type: 'spring',
+                            stiffness: 400,
+                            damping: 32,
+                            mass: 0.7,
+                          }
+                    }
+                  />
+                )}
                 <Icon size={16} />
                 <span>{link.label}</span>
               </Link>
