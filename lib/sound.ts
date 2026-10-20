@@ -1,20 +1,22 @@
 /**
  * Audio Synthesis Utility menggunakan Web Audio API murni.
- * Tanpa perlu unduh file audio eksternal (.mp3/.wav), bekerja offline & tanpa latensi.
+ * Tanpa perlu file audio eksternal (.mp3/.wav), bekerja 100% offline & tanpa latensi.
  */
 
 let sharedAudioCtx: AudioContext | null = null;
+let audioUnlocked = false;
 
-function getAudioContext(): AudioContext | null {
+/**
+ * Dapatkan atau buat AudioContext. Dibuat lazy (hanya setelah ada interaksi user)
+ * untuk menghindari autoplay policy browser.
+ */
+export function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return null;
     if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
       sharedAudioCtx = new AudioCtx();
-    }
-    if (sharedAudioCtx.state === 'suspended') {
-      sharedAudioCtx.resume().catch(() => {});
     }
     return sharedAudioCtx;
   } catch {
@@ -23,29 +25,52 @@ function getAudioContext(): AudioContext | null {
 }
 
 /**
- * Mainkan Efek Suara Kemenangan Juara 1 (Triumphant Victory Fanfare + Sparkle Chimes)
+ * Buka kunci AudioContext. Dipanggil saat interaksi user.
  */
-export function playVictorySound(volume = 0.8) {
+export function unlockAudio() {
+  if (typeof window === 'undefined') return;
+  audioUnlocked = true;
   try {
     const ctx = getAudioContext();
-    if (!ctx) return;
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+  } catch {}
+}
 
+// Pasang listener global otomatis — mendeteksi interaksi user pertama kali
+// Tidak hapus listener setelah satu event agar setiap tipe interaksi ter-handle
+if (typeof window !== 'undefined') {
+  const onUserInteraction = () => {
+    if (!audioUnlocked) {
+      unlockAudio();
+    }
+  };
+  window.addEventListener('pointerdown', onUserInteraction, { passive: true });
+  window.addEventListener('touchstart', onUserInteraction, { passive: true });
+  window.addEventListener('click', onUserInteraction, { passive: true });
+  window.addEventListener('keydown', onUserInteraction, { passive: true });
+}
+
+function runVictoryNotes(ctx: AudioContext, volume = 0.85) {
+  try {
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
     masterGain.gain.setValueAtTime(Math.min(Math.max(volume, 0), 1), now);
     masterGain.connect(ctx.destination);
 
-    // Filter hangat untuk instrumen brass
+    // Filter hangat & dinamis untuk instrumen brass terompet
     const brassFilter = ctx.createBiquadFilter();
     brassFilter.type = 'lowpass';
-    brassFilter.frequency.setValueAtTime(2600, now);
-    brassFilter.Q.setValueAtTime(1.8, now);
+    brassFilter.frequency.setValueAtTime(3200, now);
+    brassFilter.frequency.exponentialRampToValueAtTime(2000, now + 1.2);
+    brassFilter.Q.setValueAtTime(2.0, now);
     brassFilter.connect(masterGain);
 
     // ─────────────────────────────────────────────
-    // 1. FANFARE BRASS ARPEGGIO MELODI
+    // 1. FANFARE BRASS ARPEGGIO MELODI JUARA
     // ─────────────────────────────────────────────
-    // G4 -> C5 -> E5 -> G5 -> GRAND FINALE CHORD (C5+E5+G5+C6)
+    // G4 -> C5 -> E5 -> G5 -> GRAND FINALE CHORD
     const melody = [
       { freq: 392.0, time: 0.0, dur: 0.13 },   // G4
       { freq: 523.25, time: 0.14, dur: 0.13 },  // C5
@@ -62,7 +87,7 @@ export function playVictorySound(volume = 0.8) {
       osc.frequency.setValueAtTime(freq, startTime);
 
       noteGain.gain.setValueAtTime(0.001, startTime);
-      noteGain.gain.linearRampToValueAtTime(0.4, startTime + 0.02);
+      noteGain.gain.linearRampToValueAtTime(0.45, startTime + 0.02);
       noteGain.gain.exponentialRampToValueAtTime(0.01, startTime + dur);
 
       osc.connect(noteGain);
@@ -76,18 +101,17 @@ export function playVictorySound(volume = 0.8) {
     // 2. GRAND FINALE CHORD (C Mayor Megah pada t = 0.65s)
     // ─────────────────────────────────────────────
     const chordTime = now + 0.65;
-    const chordDur = 1.5;
-    const chordFreqs = [261.63, 523.25, 659.25, 783.99, 1046.5]; // C4, C5, E5, G5, C6
+    const chordDur = 1.6;
+    const chordFreqs = [261.63, 392.0, 523.25, 659.25, 783.99, 1046.5]; // C4, G4, C5, E5, G5, C6
 
     chordFreqs.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
       const noteGain = ctx.createGain();
 
-      // Campuran gelombang sawtooth & triangle untuk ketebalan bunyi
       osc.type = idx === 0 ? 'triangle' : 'sawtooth';
       osc.frequency.setValueAtTime(freq, chordTime);
 
-      const peakVolume = idx === 0 ? 0.35 : 0.22;
+      const peakVolume = idx === 0 ? 0.35 : 0.24;
       noteGain.gain.setValueAtTime(0.001, chordTime);
       noteGain.gain.linearRampToValueAtTime(peakVolume, chordTime + 0.04);
       noteGain.gain.exponentialRampToValueAtTime(0.001, chordTime + chordDur);
@@ -99,15 +123,15 @@ export function playVictorySound(volume = 0.8) {
       osc.stop(chordTime + chordDur + 0.1);
     });
 
-    // Sub-bass thud saat akord utama berbunyi untuk hentakan emosional
+    // Sub-bass impact saat akord utama berbunyi
     const bassOsc = ctx.createOscillator();
     const bassGain = ctx.createGain();
     bassOsc.type = 'sine';
-    bassOsc.frequency.setValueAtTime(95, chordTime);
-    bassOsc.frequency.exponentialRampToValueAtTime(35, chordTime + 0.35);
+    bassOsc.frequency.setValueAtTime(105, chordTime);
+    bassOsc.frequency.exponentialRampToValueAtTime(32, chordTime + 0.38);
 
-    bassGain.gain.setValueAtTime(0.45, chordTime);
-    bassGain.gain.exponentialRampToValueAtTime(0.001, chordTime + 0.4);
+    bassGain.gain.setValueAtTime(0.5, chordTime);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, chordTime + 0.42);
 
     bassOsc.connect(bassGain);
     bassGain.connect(masterGain);
@@ -116,12 +140,11 @@ export function playVictorySound(volume = 0.8) {
     bassOsc.stop(chordTime + 0.45);
 
     // ─────────────────────────────────────────────
-    // 3. SPARKLE CHIMES (Kilau Bintang Kemenangan)
+    // 3. SPARKLE CHIMES (Denting Kilau Bintang)
     // ─────────────────────────────────────────────
-    // Arpeggio nada tinggi bergulir di t = 0.9s
     const sparkleNotes = [
-      { freq: 1318.51, delay: 0.90 }, // E6
-      { freq: 1567.98, delay: 0.99 }, // G6
+      { freq: 1318.51, delay: 0.88 }, // E6
+      { freq: 1567.98, delay: 0.98 }, // G6
       { freq: 2093.00, delay: 1.08 }, // C7
       { freq: 2637.02, delay: 1.18 }, // E7
       { freq: 3135.96, delay: 1.28 }, // G7
@@ -136,16 +159,57 @@ export function playVictorySound(volume = 0.8) {
       sOsc.frequency.setValueAtTime(freq, sTime);
 
       sGain.gain.setValueAtTime(0.001, sTime);
-      sGain.gain.linearRampToValueAtTime(0.2, sTime + 0.015);
-      sGain.gain.exponentialRampToValueAtTime(0.0001, sTime + 0.55);
+      sGain.gain.linearRampToValueAtTime(0.25, sTime + 0.015);
+      sGain.gain.exponentialRampToValueAtTime(0.0001, sTime + 0.6);
 
       sOsc.connect(sGain);
       sGain.connect(masterGain);
 
       sOsc.start(sTime);
-      sOsc.stop(sTime + 0.6);
+      sOsc.stop(sTime + 0.65);
     });
-  } catch (e) {
-    console.warn('Audio playback error:', e);
+  } catch (err) {
+    console.warn('Gagal memainkan nada kemenangan:', err);
   }
+}
+
+/**
+ * Mainkan Efek Suara Kemenangan Juara 1
+ * Dengan retry mechanism untuk mengatasi AudioContext yang masih suspended.
+ */
+export function playVictorySound(volume = 0.85) {
+  if (typeof window === 'undefined') return;
+
+  const tryPlay = (attemptsLeft: number) => {
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+
+      if (ctx.state === 'suspended') {
+        ctx
+          .resume()
+          .then(() => {
+            // Tambahkan sedikit delay setelah resume agar AudioContext siap
+            setTimeout(() => runVictoryNotes(ctx, volume), 80);
+          })
+          .catch(() => {
+            // Retry jika masih gagal
+            if (attemptsLeft > 0) {
+              setTimeout(() => tryPlay(attemptsLeft - 1), 150);
+            }
+          });
+        return;
+      }
+
+      runVictoryNotes(ctx, volume);
+    } catch (e) {
+      console.warn('Audio playback error:', e);
+      if (attemptsLeft > 0) {
+        setTimeout(() => tryPlay(attemptsLeft - 1), 150);
+      }
+    }
+  };
+
+  // Coba mainkan langsung, dengan fallback 3 retry @ 150ms
+  tryPlay(3);
 }

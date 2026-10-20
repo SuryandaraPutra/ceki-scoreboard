@@ -41,6 +41,7 @@ import {
 import { toast } from 'sonner';
 import { TableScreenModal } from '@/components/game/TableScreenModal';
 import { VictoryShareModal } from '@/components/game/VictoryShareModal';
+import { unlockAudio } from '@/lib/sound';
 
 export default function HomePage() {
   const router = useRouter();
@@ -113,19 +114,27 @@ export default function HomePage() {
     (activeGame: any, finalScores?: any[], finishedTimestamp?: number) => {
       if (!activeGame) return;
 
+      // finalScores bisa berupa PlayerScore[] dari API (field: playerId, playerName, totalScore, rank)
+      // atau updatedGameScores[] dari rounds API (field sama)
       const scoreMap = new Map<number, any>();
-      if (finalScores) {
-        finalScores.forEach((s) => scoreMap.set(s.playerId, s));
+      if (finalScores && Array.isArray(finalScores)) {
+        finalScores.forEach((s) => {
+          // Support kedua format: s.playerId (dari API) atau s.id (dari state)
+          const pid = s.playerId ?? s.id;
+          if (pid != null) scoreMap.set(pid, s);
+        });
       }
 
       const sortedPlayers = (activeGame.players || [])
         .map((p: any) => {
           const fs = scoreMap.get(p.id);
-          const totalScore = fs ? fs.totalScore : p.totalScore;
-          const rank = fs ? fs.rank : p.rank;
+          const totalScore = fs?.totalScore ?? p.totalScore ?? 0;
+          const rank = fs?.rank ?? p.rank ?? 999;
+          // Ambil nama dari state (pasti ada), atau dari API (playerName)
+          const name = p.name ?? fs?.playerName ?? 'Pemain';
           return {
             id: p.id,
-            name: p.name,
+            name,
             color: p.color,
             photoVersion: p.photoVersion,
             totalScore,
@@ -170,13 +179,16 @@ export default function HomePage() {
       return;
     }
 
+    // Simpan snapshot game SEBELUM saveRound (yang akan memanggil mutate dan bisa menghapus state game)
+    const gameSnapshot = game;
+
     try {
       setIsSaving(true);
       const res = await saveRound(currentRoundScores);
 
       // Reset input round
       const resetScores: Record<number, number> = {};
-      for (const p of game.players) {
+      for (const p of gameSnapshot.players) {
         resetScores[p.id] = 0;
       }
       setCurrentRoundScores(resetScores);
@@ -186,12 +198,13 @@ export default function HomePage() {
       // Jika batas skor tercapai dan aksi adalah 'auto', game otomatis selesai
       if (res?.isAutoFinished) {
         toast.success('Batas skor tertinggi tercapai! Permainan selesai.');
-        triggerVictoryCelebration(game, res?.updatedGameScores);
+        // Gunakan gameSnapshot karena game state mungkin sudah null setelah mutate()
+        triggerVictoryCelebration(gameSnapshot, res?.updatedGameScores);
         return;
       }
 
       // Jika batas skor tercapai dan aksinya 'ask', tanyakan ke pengguna
-      if (res?.hasReachedScoreLimit && game.scoreLimitAction === 'ask') {
+      if (res?.hasReachedScoreLimit && gameSnapshot.scoreLimitAction === 'ask') {
         setTimeout(() => {
           setIsFinishConfirmOpen(true);
         }, 400);
@@ -249,19 +262,27 @@ export default function HomePage() {
   const handleFinishGame = async () => {
     if (!game) return;
     try {
+      // Simpan snapshot SEBELUM finishGame() yang akan memanggil mutate() dan menghapus state game
       const currentGameSnapshot = game;
+
+      // finishGame() hook sudah mengembalikan result.data langsung (sudah di-unwrap)
+      // Struktur: { gameId, gameName, finishedAt, scores: PlayerScore[], winners, summaryText }
       const res = await finishGame();
-      if (res?.data) {
+
+      if (res) {
         setWinnerModalData({
-          scores: res.data.scores,
-          summaryText: res.data.summaryText,
+          scores: res.scores,
+          summaryText: res.summaryText,
         });
         // Tampilkan gambar siap dibagikan ke layar dengan sound efek kemenangan & juara 1
         triggerVictoryCelebration(
           currentGameSnapshot,
-          res.data.scores,
-          res.data.finishedAt
+          res.scores,
+          res.finishedAt
         );
+      } else {
+        // Fallback: tampilkan dengan data dari snapshot meski tanpa skor final dari API
+        triggerVictoryCelebration(currentGameSnapshot);
       }
       toast.success('Permainan selesai!');
     } catch (err: any) {

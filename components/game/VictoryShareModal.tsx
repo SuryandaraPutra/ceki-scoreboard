@@ -75,9 +75,18 @@ function drawRoundedRect(
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const timer = setTimeout(() => {
+      reject(new Error('Timeout loading photo'));
+    }, 1500);
     img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Gagal memuat gambar'));
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error('Gagal memuat gambar'));
+    };
     img.src = src;
   });
 }
@@ -104,13 +113,20 @@ export function VictoryShareModal({
     });
   }, [game]);
 
-  const winner = sortedPlayers[0];
+  const winner = sortedPlayers[0] || (game?.players && game.players[0]);
 
   // Efek Suara Kemenangan & Ledakan Confetti otomatis saat modal dibuka
   useEffect(() => {
     if (isOpen && game) {
-      // Mainkan efek suara kemenangan (fanfare brass + chimes)
-      playVictorySound();
+      // Mainkan efek suara kemenangan dengan sedikit delay agar browser sempat
+      // memproses interaksi user yang membuka modal ini (klik tombol akhiri game)
+      const soundTimer = setTimeout(() => {
+        playVictorySound();
+      }, 300);
+      // Mainkan lagi setelah 500ms untuk echo / efek gema
+      const echoTimer = setTimeout(() => {
+        playVictorySound(0.5);
+      }, 800);
 
       // Ledakkan confetti meriah
       const count = 220;
@@ -127,6 +143,11 @@ export function VictoryShareModal({
       fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
       fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
       fire(0.1, { spread: 120, startVelocity: 45 });
+
+      return () => {
+        clearTimeout(soundTimer);
+        clearTimeout(echoTimer);
+      };
     }
   }, [isOpen, game]);
 
