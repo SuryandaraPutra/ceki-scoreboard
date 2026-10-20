@@ -335,9 +335,8 @@ export default function HomePage() {
             <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
               KOCOK KEKAR
             </h1>
-            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
-              Papan hitung skor modern untuk permainan kartu Ceki 4 orang.
-              Tersimpan otomatis, sinkron real-time, dan siap dipakai di HP maupun desktop.
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-2 max-w-lg mx-auto font-medium italic">
+              &ldquo;Hidup itu kayak Ceki: kartu bagus belum tentu menang, kartu jelek belum tentu kalah, yang pasti tetangga sebelah selalu curang.&rdquo;
             </p>
           </div>
 

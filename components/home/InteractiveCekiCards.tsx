@@ -1,51 +1,52 @@
 'use client';
 
 /**
- * Komponen Interaktif Kartu Ceki:
- * - Menampilkan 4 kartu Ceki bergaya tradisional yang tersusun rapi
- * - Interaksi Sentuh & Goyang (Tap & Wobble/Shuffle):
+ * Komponen Interaktif Kartu Remi (Playing Cards):
+ * - Menampilkan 4 kartu remi (As Sekop ♠, King Hati ♥, Queen Wajik ♦, Jack Keriting ♣)
+ * - Interaksi Sentuh & Goyang (Tap & Shuffle):
  *   - Animasi kocok kartu 3D yang lincah dengan Framer Motion
- *   - Efek suara kocok kartu berbasis Web Audio API (tanpa perlu file audio eksternal)
+ *   - Efek suara desiran kartu (card flutter/shuffle) berbasis Web Audio API
  *   - Getaran haptic di HP saat disentuh
- *   - Balon reaksi jenaka khas KOCOK KEKAR yang berganti-ganti
+ *   - Balon reaksi jenaka seputar ceki & kartu remi
  *   - Penghitung berapa kali kartu sudah dikocok
  */
 
 import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { vibrate } from '@/lib/constants';
-import { Sparkles, Flame } from 'lucide-react';
+import { Sparkles, Flame, Crown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-interface CekiCardData {
+interface PlayingCardData {
   id: number;
-  label: string;
-  char: string;
+  rank: string;
+  suit: 'spade' | 'heart' | 'diamond' | 'club';
+  suitSymbol: string;
   color: 'red' | 'black';
-  badge: string;
+  name: string;
   baseRotate: number;
   baseX: number;
   baseY: number;
 }
 
-const CARDS: CekiCardData[] = [
-  { id: 1, label: 'Merah', char: '紅', color: 'red', badge: 'HONG', baseRotate: -18, baseX: -36, baseY: 12 },
-  { id: 2, label: 'Putih', char: '白', color: 'black', badge: 'PEH', baseRotate: -6, baseX: -12, baseY: 2 },
-  { id: 3, label: 'Titik', char: '點', color: 'red', badge: 'TIAM', baseRotate: 6, baseX: 12, baseY: 2 },
-  { id: 4, label: 'Huat', char: '發', color: 'red', badge: 'HUAT', baseRotate: 18, baseX: 36, baseY: 12 },
+const CARDS: PlayingCardData[] = [
+  { id: 1, rank: 'A', suit: 'spade',   suitSymbol: '♠', color: 'black', name: 'As Sekop',      baseRotate: -18, baseX: -36, baseY: 12 },
+  { id: 2, rank: 'K', suit: 'heart',   suitSymbol: '♥', color: 'red',   name: 'King Hati',     baseRotate: -6,  baseX: -12, baseY: 2 },
+  { id: 3, rank: 'Q', suit: 'diamond', suitSymbol: '♦', color: 'red',   name: 'Queen Wajik',   baseRotate: 6,   baseX: 12,  baseY: 2 },
+  { id: 4, rank: 'J', suit: 'club',    suitSymbol: '♣', color: 'black', name: 'Jack Keriting', baseRotate: 18,  baseX: 36,  baseY: 12 },
 ];
 
 const QUOTES = [
-  'Kocok terooos bang! 🔥',
-  'Awas kena slepet! 🃏',
-  'Gua lagi aje ranger merahnyeee! 👑',
-  'Hoki nih, ceki di tangan! 🎴',
+  'As Sekop di tangan, muka tetap santai! ♠️',
+  'King Hati keluar, auto menang tipis! ♥️',
+  'Awas wajiknya nyelip di lengan baju! ♦️',
+  'Jack Keriting sakti mandraguna! ♣️',
+  'Kocok terooos, jangan kasih kendor! 🔥',
+  'Tetangga sebelah mulai lirik-lirik... 👀',
+  'Kartu dewa siap turun ke meja! ✨',
   'Kocok Kekar, main barbar! 💪',
-  'Kartu dewa turun! ✨',
-  'Kena kunci lu pade! 🔒',
-  'Satu round lagi gas! ⚡',
-  'Duit goceng jadi ceban! 💰',
-  'Kocokan sakti mandraguna! 🌪️',
+  'Satu round lagi gaspol! ⚡',
+  'Jangan sampai salah buang kartu! 🃏',
 ];
 
 export function InteractiveCekiCards() {
@@ -68,7 +69,7 @@ export function InteractiveCekiCards() {
         ctx.resume();
       }
 
-      // 4 flutter burst meniru gesekan kertas kartu
+      // 4 flutter burst meniru gesekan kertas kartu remi
       for (let i = 0; i < 4; i++) {
         const time = ctx.currentTime + i * 0.045;
         const bufferSize = ctx.sampleRate * 0.035;
@@ -110,7 +111,7 @@ export function InteractiveCekiCards() {
     setShakeCount((prev) => prev + 1);
     setShuffleSeed((prev) => prev + 1);
 
-    // Pilih quote acak yang berbeda
+    // Ganti quote acak
     const nextQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
     setCurrentQuote(nextQuote);
 
@@ -134,15 +135,15 @@ export function InteractiveCekiCards() {
 
   return (
     <div className="flex flex-col items-center select-none pt-2 pb-1">
-      {/* Container Kartu Interaktif */}
+      {/* Container Kartu Remi Interaktif */}
       <motion.button
         type="button"
         onClick={handleShuffle}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="relative w-56 h-36 flex items-center justify-center cursor-pointer group focus:outline-none"
-        title="Ketuk atau sentuh untuk mengocok kartu Ceki!"
-        aria-label="Kocok Kartu Ceki"
+        title="Ketuk atau sentuh untuk mengocok kartu remi!"
+        aria-label="Kocok Kartu Remi"
       >
         {/* Lingkaran Aura Cahaya Bersinar di Belakang Kartu */}
         <div
@@ -151,7 +152,7 @@ export function InteractiveCekiCards() {
           }`}
         />
 
-        {/* 4 Kartu Ceki Tradisional */}
+        {/* 4 Kartu Remi Tersusun Fanned Out */}
         <div className="relative w-full h-full flex items-center justify-center">
           {CARDS.map((card, idx) => {
             // Dynamic jitter saat dikocok
@@ -164,6 +165,11 @@ export function InteractiveCekiCards() {
             const shuffleY = isShuffling
               ? card.baseY - (Math.abs(Math.sin(shuffleSeed + idx)) * 18)
               : card.baseY;
+
+            const isRed = card.color === 'red';
+            const colorClass = isRed
+              ? 'text-rose-600 dark:text-rose-400'
+              : 'text-slate-900 dark:text-slate-100';
 
             return (
               <motion.div
@@ -183,55 +189,64 @@ export function InteractiveCekiCards() {
                   zIndex: idx + 1,
                   transformOrigin: 'bottom center',
                 }}
-                className="absolute w-14 sm:w-16 h-24 sm:h-28 rounded-2xl p-1.5 flex flex-col justify-between shadow-lg shadow-black/20 border-2 transition-shadow duration-200 bg-gradient-to-b from-amber-50 via-white to-amber-100/90 dark:from-slate-800 dark:via-slate-850 dark:to-slate-900 border-amber-300/80 dark:border-amber-500/40 hover:border-emerald-400 group-hover:shadow-emerald-500/20"
+                className="absolute w-15 sm:w-16 h-24 sm:h-28 rounded-xl p-1.5 flex flex-col justify-between shadow-lg shadow-black/20 border transition-all duration-200 bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-700/80 hover:border-emerald-400 group-hover:shadow-emerald-500/20 ring-1 ring-black/5"
               >
-                {/* Header Kartu: Karakter Mini & Suit Badge */}
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`text-[10px] font-black ${
-                      card.color === 'red' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'
-                    }`}
-                  >
-                    {card.char}
+                {/* Garis batas dalam kartu remi klasik */}
+                <div className="absolute inset-1 rounded-lg border border-slate-200/50 dark:border-slate-800/80 pointer-events-none" />
+
+                {/* Indeks Pojok Kiri Atas: Angka/Huruf + Lambang Remi */}
+                <div className="relative z-10 flex flex-col items-start leading-none pl-0.5 pt-0.5">
+                  <span className={`text-xs font-black tracking-tight ${colorClass}`}>
+                    {card.rank}
                   </span>
-                  <span className="text-[7px] font-black uppercase tracking-tighter px-1 py-0.2 rounded-full bg-amber-200/60 dark:bg-slate-700 text-amber-900 dark:text-amber-300">
-                    {card.badge}
+                  <span className={`text-[11px] leading-tight ${colorClass}`}>
+                    {card.suitSymbol}
                   </span>
                 </div>
 
-                {/* Karakter Tradisional Utama di Tengah */}
-                <div className="flex flex-col items-center justify-center my-auto">
-                  <span
-                    className={`text-2xl sm:text-3xl font-black drop-shadow-sm select-none ${
-                      card.color === 'red'
-                        ? 'text-rose-600 dark:text-rose-400'
-                        : 'text-slate-850 dark:text-slate-100'
-                    }`}
-                    style={{ fontFamily: 'serif' }}
-                  >
-                    {card.char}
-                  </span>
-                  <div
-                    className={`w-4 h-1 rounded-full mt-0.5 ${
-                      card.color === 'red' ? 'bg-rose-500/40' : 'bg-slate-400/40'
-                    }`}
-                  />
+                {/* Bagian Tengah Kartu: Desain Visual Khas Remi */}
+                <div className="relative z-10 flex flex-col items-center justify-center my-auto">
+                  {card.rank === 'A' ? (
+                    // As Sekop: Lambang Sekop Besar Elegan
+                    <div className="relative flex items-center justify-center">
+                      <span className="text-3xl select-none text-slate-900 dark:text-slate-100 drop-shadow-sm font-serif">
+                        ♠
+                      </span>
+                    </div>
+                  ) : card.rank === 'K' ? (
+                    // King Hati: Mahkota Mini + Simbol Hati
+                    <div className="flex flex-col items-center -space-y-1">
+                      <Crown size={12} className="text-amber-500 fill-amber-400" />
+                      <span className="text-2xl select-none text-rose-600 dark:text-rose-400 drop-shadow-sm">
+                        ♥
+                      </span>
+                    </div>
+                  ) : card.rank === 'Q' ? (
+                    // Queen Wajik: Mahkota Tiara + Simbol Wajik
+                    <div className="flex flex-col items-center -space-y-1">
+                      <Crown size={10} className="text-amber-400" />
+                      <span className="text-2xl select-none text-rose-600 dark:text-rose-400 drop-shadow-sm">
+                        ♦
+                      </span>
+                    </div>
+                  ) : (
+                    // Jack Keriting: Lambang Keriting Cantik
+                    <div className="flex flex-col items-center">
+                      <span className="text-2xl select-none text-slate-900 dark:text-slate-100 drop-shadow-sm">
+                        ♣
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Footer Kartu (Simbol Terbalik) */}
-                <div className="flex items-center justify-between rotate-180">
-                  <span
-                    className={`text-[10px] font-black ${
-                      card.color === 'red' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'
-                    }`}
-                  >
-                    {card.char}
+                {/* Indeks Pojok Kanan Bawah: Angka/Huruf + Lambang (Rotated 180°) */}
+                <div className="relative z-10 flex flex-col items-start leading-none pl-0.5 pt-0.5 rotate-180 self-end">
+                  <span className={`text-xs font-black tracking-tight ${colorClass}`}>
+                    {card.rank}
                   </span>
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      card.color === 'red' ? 'bg-rose-500' : 'bg-slate-700 dark:bg-slate-300'
-                    }`}
-                  />
+                  <span className={`text-[11px] leading-tight ${colorClass}`}>
+                    {card.suitSymbol}
+                  </span>
                 </div>
               </motion.div>
             );
