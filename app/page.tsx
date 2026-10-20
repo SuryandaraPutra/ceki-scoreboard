@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TableScreenModal } from '@/components/game/TableScreenModal';
+import { VictoryShareModal } from '@/components/game/VictoryShareModal';
 
 export default function HomePage() {
   const router = useRouter();
@@ -66,6 +67,8 @@ export default function HomePage() {
   const [isFinishConfirmOpen, setIsFinishConfirmOpen] = useState(false);
   const [isWinnerModalOpen, setIsWinnerModalOpen] = useState(false);
   const [isTableModeOpen, setIsTableModeOpen] = useState(false);
+  const [isVictoryShareOpen, setIsVictoryShareOpen] = useState(false);
+  const [finishedGameForVictory, setFinishedGameForVictory] = useState<any | null>(null);
   const [winnerModalData, setWinnerModalData] = useState<{
     scores: any[];
     summaryText: string;
@@ -105,6 +108,54 @@ export default function HomePage() {
     return Object.values(currentRoundScores).some((s) => s !== 0);
   }, [currentRoundScores]);
 
+  // Tampilkan Kartu Gambar Kemenangan Juara 1 dengan Sound Efek Kemenangan
+  const triggerVictoryCelebration = useCallback(
+    (activeGame: any, finalScores?: any[], finishedTimestamp?: number) => {
+      if (!activeGame) return;
+
+      const scoreMap = new Map<number, any>();
+      if (finalScores) {
+        finalScores.forEach((s) => scoreMap.set(s.playerId, s));
+      }
+
+      const sortedPlayers = (activeGame.players || [])
+        .map((p: any) => {
+          const fs = scoreMap.get(p.id);
+          const totalScore = fs ? fs.totalScore : p.totalScore;
+          const rank = fs ? fs.rank : p.rank;
+          return {
+            id: p.id,
+            name: p.name,
+            color: p.color,
+            photoVersion: p.photoVersion,
+            totalScore,
+            rank,
+            isWinner: rank === 1,
+          };
+        })
+        .sort((a: any, b: any) => {
+          if (a.rank && b.rank) return a.rank - b.rank;
+          return b.totalScore - a.totalScore;
+        });
+
+      const gamePayload = {
+        id: activeGame.id,
+        name: activeGame.name,
+        createdAt: activeGame.createdAt,
+        finishedAt: finishedTimestamp || Math.floor(Date.now() / 1000),
+        totalRounds: activeGame.rounds?.length || 0,
+        rounds: activeGame.rounds || [],
+        players: sortedPlayers,
+      };
+
+      setFinishedGameForVictory(gamePayload);
+      setIsTableModeOpen(false);
+      setIsFinishConfirmOpen(false);
+      setIsVictoryShareOpen(true);
+    },
+    []
+  );
+
   // Simpan Round
   const handleSaveRound = useCallback(async () => {
     if (!game) return;
@@ -132,18 +183,25 @@ export default function HomePage() {
 
       toast.success(res?.message || 'Round berhasil disimpan!');
 
+      // Jika batas skor tercapai dan aksi adalah 'auto', game otomatis selesai
+      if (res?.isAutoFinished) {
+        toast.success('Batas skor tertinggi tercapai! Permainan selesai.');
+        triggerVictoryCelebration(game, res?.updatedGameScores);
+        return;
+      }
+
       // Jika batas skor tercapai dan aksinya 'ask', tanyakan ke pengguna
       if (res?.hasReachedScoreLimit && game.scoreLimitAction === 'ask') {
         setTimeout(() => {
           setIsFinishConfirmOpen(true);
-        }, 500);
+        }, 400);
       }
     } catch (err: any) {
       toast.error(err.message || 'Gagal menyimpan round');
     } finally {
       setIsSaving(false);
     }
-  }, [game, isOnline, roundSum, currentRoundScores, saveRound]);
+  }, [game, isOnline, roundSum, currentRoundScores, saveRound, triggerVictoryCelebration]);
 
   // Undo round terakhir
   const handleUndo = useCallback(async () => {
@@ -187,16 +245,23 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSaveRound, handleUndo, isSaving, isZeroSumValid]);
 
-  // Akhiri Game & Buka Podium
+  // Akhiri Game & Tampilkan Gambar Siap Bagikan + Efek Suara Kemenangan
   const handleFinishGame = async () => {
+    if (!game) return;
     try {
+      const currentGameSnapshot = game;
       const res = await finishGame();
       if (res?.data) {
         setWinnerModalData({
           scores: res.data.scores,
           summaryText: res.data.summaryText,
         });
-        setIsWinnerModalOpen(true);
+        // Tampilkan gambar siap dibagikan ke layar dengan sound efek kemenangan & juara 1
+        triggerVictoryCelebration(
+          currentGameSnapshot,
+          res.data.scores,
+          res.data.finishedAt
+        );
       }
       toast.success('Permainan selesai!');
     } catch (err: any) {
@@ -240,60 +305,77 @@ export default function HomePage() {
   // ─────────────────────────────────────────────
   if (!isLoading && !game) {
     return (
-      <div className="max-w-2xl mx-auto flex flex-col items-center text-center gap-6 py-8 sm:py-16 animate-fade-in">
-        {/* Kartu Ceki Interaktif (Sentuh & Goyang) */}
-        <InteractiveCekiCards />
+      <>
+        <div className="max-w-2xl mx-auto flex flex-col items-center text-center gap-6 py-8 sm:py-16 animate-fade-in">
+          {/* Kartu Ceki Interaktif (Sentuh & Goyang) */}
+          <InteractiveCekiCards />
 
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-            KOCOK KEKAR
-          </h1>
-          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
-            Papan hitung skor modern untuk permainan kartu Ceki 4 orang.
-            Tersimpan otomatis, sinkron real-time, dan siap dipakai di HP maupun desktop.
-          </p>
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+              KOCOK KEKAR
+            </h1>
+            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
+              Papan hitung skor modern untuk permainan kartu Ceki 4 orang.
+              Tersimpan otomatis, sinkron real-time, dan siap dipakai di HP maupun desktop.
+            </p>
+          </div>
+
+          {/* Tombol Utama Mulai Game */}
+          <Link
+            href="/game/new"
+            className="btn-primary py-4 px-8 text-base font-black flex items-center gap-2.5 shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all"
+          >
+            <Play size={20} fill="currentColor" />
+            <span>Mulai Game Baru</span>
+          </Link>
+
+          {/* Pintasan Menu Lain */}
+          <div className="grid grid-cols-3 gap-3 w-full max-w-md pt-4">
+            <Link
+              href="/players"
+              className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-emerald-500 transition-colors"
+            >
+              <Users size={22} className="text-emerald-500" />
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Pemain
+              </span>
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-amber-500 transition-colors"
+            >
+              <Trophy size={22} className="text-amber-500" />
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Leaderboard
+              </span>
+            </Link>
+            <Link
+              href="/history"
+              className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-sky-500 transition-colors"
+            >
+              <History size={22} className="text-sky-500" />
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Riwayat
+              </span>
+            </Link>
+          </div>
         </div>
 
-        {/* Tombol Utama Mulai Game */}
-        <Link
-          href="/game/new"
-          className="btn-primary py-4 px-8 text-base font-black flex items-center gap-2.5 shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all"
-        >
-          <Play size={20} fill="currentColor" />
-          <span>Mulai Game Baru</span>
-        </Link>
-
-        {/* Pintasan Menu Lain */}
-        <div className="grid grid-cols-3 gap-3 w-full max-w-md pt-4">
-          <Link
-            href="/players"
-            className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-emerald-500 transition-colors"
-          >
-            <Users size={22} className="text-emerald-500" />
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Pemain
-            </span>
-          </Link>
-          <Link
-            href="/leaderboard"
-            className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-amber-500 transition-colors"
-          >
-            <Trophy size={22} className="text-amber-500" />
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Leaderboard
-            </span>
-          </Link>
-          <Link
-            href="/history"
-            className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-sky-500 transition-colors"
-          >
-            <History size={22} className="text-sky-500" />
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Riwayat
-            </span>
-          </Link>
-        </div>
-      </div>
+        {/* Modal Gambar Kemenangan Siap Bagikan (Tetap tampil setelah game diselesaikan) */}
+        <VictoryShareModal
+          isOpen={isVictoryShareOpen}
+          onClose={() => {
+            setIsVictoryShareOpen(false);
+            setFinishedGameForVictory(null);
+          }}
+          game={finishedGameForVictory}
+          onNewGame={() => {
+            setIsVictoryShareOpen(false);
+            setFinishedGameForVictory(null);
+            router.push('/game/new');
+          }}
+        />
+      </>
     );
   }
 
@@ -513,9 +595,13 @@ export default function HomePage() {
         isOpen={isFinishConfirmOpen}
         onClose={() => setIsFinishConfirmOpen(false)}
         onConfirm={handleFinishGame}
-        title="Akhiri Permainan Sekarang?"
-        message={`Game akan diselesaikan dan skor akhir akan dikunci ke riwayat permainan.\n\nPemenang akan ditentukan dan podium akan ditampilkan.`}
-        confirmText="Ya, Akhiri Game"
+        title={game?.hasReachedScoreLimit ? '🏁 Batas Skor Tertinggi Tercapai!' : 'Akhiri Permainan Sekarang?'}
+        message={
+          game?.hasReachedScoreLimit
+            ? `Pemain telah mencapai atau melebihi batas skor target (${game.scoreLimit}).\n\nAkhiri permainan sekarang untuk menampilkan gambar kemenangan juara 1 & sound efek kemenangan?`
+            : `Game akan diselesaikan dan skor akhir akan dikunci ke riwayat permainan.\n\nPemenang akan ditentukan dan kartu gambar kemenangan siap dibagikan akan ditampilkan.`
+        }
+        confirmText="Ya, Akhiri Game & Lihat Juara"
         cancelText="Lanjut Main"
       />
 
@@ -524,7 +610,7 @@ export default function HomePage() {
         <GameWinnerModal
           isOpen={isWinnerModalOpen}
           onClose={() => setIsWinnerModalOpen(false)}
-          gameName={game.name}
+          gameName={game?.name || finishedGameForVictory?.name}
           players={winnerModalData.scores}
           playerColors={playerColorsMap}
           playerPhotoVersions={playerPhotosMap}
@@ -535,6 +621,22 @@ export default function HomePage() {
           }}
         />
       )}
+
+      {/* MODAL GAMBAR KEMENANGAN SIAP BAGIKAN (DENGAN SOUND EFEK & JUARA 1) */}
+      <VictoryShareModal
+        isOpen={isVictoryShareOpen}
+        onClose={() => {
+          setIsVictoryShareOpen(false);
+          setFinishedGameForVictory(null);
+        }}
+        game={finishedGameForVictory}
+        onNewGame={() => {
+          setIsVictoryShareOpen(false);
+          setFinishedGameForVictory(null);
+          router.push('/game/new');
+        }}
+      />
+
       {/* MODAL MODE LAYAR MEJA & TV */}
       <TableScreenModal
         isOpen={isTableModeOpen}

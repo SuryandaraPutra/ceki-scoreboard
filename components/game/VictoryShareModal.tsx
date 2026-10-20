@@ -10,11 +10,22 @@
  * - Tombol "Simpan ke Album Foto (Download PNG)" & "Bagikan Gambar (Web Share API)"
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import confetti from 'canvas-confetti';
 import { Modal } from '../ui/Modal';
+import { Avatar } from '../ui/Avatar';
 import { formatDate } from '@/lib/constants';
 import { getInitials } from '@/lib/calc';
-import { Download, Share2, Check, Image as ImageIcon } from 'lucide-react';
+import { playVictorySound } from '@/lib/sound';
+import {
+  Download,
+  Share2,
+  Check,
+  Image as ImageIcon,
+  Volume2,
+  Play,
+  Trophy,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PlayerInfo {
@@ -41,6 +52,7 @@ interface VictoryShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   game: GameData | null;
+  onNewGame?: () => void;
 }
 
 function drawRoundedRect(
@@ -70,13 +82,53 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalProps) {
+export function VictoryShareModal({
+  isOpen,
+  onClose,
+  game,
+  onNewGame,
+}: VictoryShareModalProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   // Default format: 9:16 (Potret Story / Status)
   const [aspectRatio, setAspectRatio] = useState<'9:16' | '3:4'>('9:16');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Ambil data pemain terurut & Juara 1
+  const sortedPlayers = useMemo(() => {
+    if (!game?.players || game.players.length === 0) return [];
+    return [...game.players].sort((a, b) => {
+      if (a.rank && b.rank) return a.rank - b.rank;
+      return b.totalScore - a.totalScore;
+    });
+  }, [game]);
+
+  const winner = sortedPlayers[0];
+
+  // Efek Suara Kemenangan & Ledakan Confetti otomatis saat modal dibuka
+  useEffect(() => {
+    if (isOpen && game) {
+      // Mainkan efek suara kemenangan (fanfare brass + chimes)
+      playVictorySound();
+
+      // Ledakkan confetti meriah
+      const count = 220;
+      const defaults = { origin: { y: 0.65 }, zIndex: 99999 };
+      function fire(particleRatio: number, opts: confetti.Options) {
+        confetti({
+          ...defaults,
+          ...opts,
+          particleCount: Math.floor(count * particleRatio),
+        });
+      }
+      fire(0.25, { spread: 26, startVelocity: 55 });
+      fire(0.2, { spread: 60 });
+      fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+      fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+      fire(0.1, { spread: 120, startVelocity: 45 });
+    }
+  }, [isOpen, game]);
 
   // Render Canvas Grafis Format Potret (9:16 atau 3:4)
   const generateVictoryImage = useCallback(async () => {
@@ -96,12 +148,12 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       if (!ctx) return;
 
       // Urutkan pemain berdasarkan rank / skor tertinggi
-      const sortedPlayers = [...game.players].sort((a, b) => {
+      const sorted = [...game.players].sort((a, b) => {
         if (a.rank && b.rank) return a.rank - b.rank;
         return b.totalScore - a.totalScore;
       });
 
-      const winner = sortedPlayers[0];
+      const champ = sorted[0];
       const roundsCount = game.totalRounds || (game.rounds ? game.rounds.length : 0);
       const dateText = formatDate(game.finishedAt || game.createdAt);
 
@@ -263,9 +315,9 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
 
       // Muat Foto Pemain atau Inisial
       let photoDrawn = false;
-      if (winner.photoVersion && winner.photoVersion > 0) {
+      if (champ.photoVersion && champ.photoVersion > 0) {
         try {
-          const photoUrl = `/api/players/${winner.id}/photo?v=${winner.photoVersion}`;
+          const photoUrl = `/api/players/${champ.id}/photo?v=${champ.photoVersion}`;
           const winnerImg = await loadImage(photoUrl);
 
           ctx.save();
@@ -290,14 +342,14 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
         ctx.save();
         ctx.beginPath();
         ctx.arc(avatarCenterX, avatarCenterY, avatarRadius, 0, Math.PI * 2);
-        ctx.fillStyle = winner.color || '#ef4444';
+        ctx.fillStyle = champ.color || '#ef4444';
         ctx.fill();
 
         ctx.font = `900 ${isStory ? 76 : 60}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(getInitials(winner.name), avatarCenterX, avatarCenterY);
+        ctx.fillText(getInitials(champ.name), avatarCenterX, avatarCenterY);
         ctx.restore();
       }
 
@@ -309,7 +361,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.textAlign = 'center';
       ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
       ctx.shadowBlur = 14;
-      ctx.fillText(winner.name, cx, winnerNameY);
+      ctx.fillText(champ.name, cx, winnerNameY);
       ctx.restore();
 
       // Skor Juara 1 Badge Pill
@@ -334,8 +386,8 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       ctx.font = `900 ${isStory ? 24 : 19}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
-      const scorePrefix = winner.totalScore > 0 ? '+' : '';
-      ctx.fillText(`TOTAL SKOR: ${scorePrefix}${winner.totalScore} POIN`, cx, scoreBadgeY + (isStory ? 35 : 29));
+      const scorePrefix = champ.totalScore > 0 ? '+' : '';
+      ctx.fillText(`TOTAL SKOR: ${scorePrefix}${champ.totalScore} POIN`, cx, scoreBadgeY + (isStory ? 35 : 29));
       ctx.restore();
 
       // ─────────────────────────────────────────────
@@ -354,7 +406,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
       const startCardX = (W - cardW) / 2;
       const startCardY = isStory ? 910 : 670;
 
-      sortedPlayers.forEach((p, idx) => {
+      sorted.forEach((p, idx) => {
         const y = startCardY + idx * (cardH + cardGap);
         const isChamp = idx === 0;
 
@@ -455,8 +507,8 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
   const handleDownload = () => {
     if (!imageUrl || !game) return;
     try {
-      const winner = [...game.players].sort((a, b) => b.totalScore - a.totalScore)[0];
-      const safeWinnerName = winner ? winner.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'juara';
+      const champ = [...game.players].sort((a, b) => b.totalScore - a.totalScore)[0];
+      const safeWinnerName = champ ? champ.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'juara';
       const ratioSlug = aspectRatio.replace(':', 'x');
       const filename = `kocok-kekar-${safeWinnerName}-game-${game.id}-potret-${ratioSlug}.png`;
 
@@ -476,8 +528,8 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
   // Bagikan via Web Share API
   const handleShare = async () => {
     if (!imageUrl || !game) return;
-    const winner = [...game.players].sort((a, b) => b.totalScore - a.totalScore)[0];
-    const shareText = `🔥 GUA LAGI AJE RANGER MERAHNYEEEE! 🔥\nSelamat kepada ${winner?.name || 'Juara 1'} memenangkan game KOCOK KEKAR!\n\nSkor: ${winner?.totalScore} poin\ncekiindongbang.vercel.app`;
+    const champ = [...game.players].sort((a, b) => b.totalScore - a.totalScore)[0];
+    const shareText = `🔥 GUA LAGI AJE RANGER MERAHNYEEEE! 🔥\nSelamat kepada ${champ?.name || 'Juara 1'} memenangkan game KOCOK KEKAR!\n\nSkor: ${champ?.totalScore} poin\ncekiindongbang.vercel.app`;
     const ratioSlug = aspectRatio.replace(':', 'x');
 
     try {
@@ -510,18 +562,63 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="🔥 Kartu Kemenangan Potret (PNG)"
-      description={`Format Potret ${aspectRatio} • Pas untuk Status WA & Story HP`}
+      title="👑 Permainan Selesai!"
+      description={winner ? `Selamat kepada ${winner.name} sebagai Juara 1!` : 'Klasemen & Hasil Pertandingan'}
       maxWidth="md"
     >
       <div className="flex flex-col gap-3.5 mt-2">
         {/* Hidden Canvas untuk Rendering Resolusi Tinggi */}
         <canvas ref={canvasRef} className="hidden" />
 
+        {/* SPOTLIGHT JUARA 1 & FANFARE SOUND REPLAY */}
+        {winner && (
+          <div className="relative overflow-hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-950/90 via-amber-950/80 to-rose-950/90 border-2 border-rose-500/70 shadow-lg shadow-rose-950/50 flex items-center justify-between gap-3 animate-fade-in">
+            <div className="flex items-center gap-3">
+              <div className="relative shrink-0">
+                <span className="absolute -top-3 -left-1.5 text-2xl animate-bounce-soft z-10">👑</span>
+                <Avatar
+                  id={winner.id}
+                  name={winner.name}
+                  color={winner.color || '#ef4444'}
+                  photoVersion={winner.photoVersion || 0}
+                  size="md"
+                  className="ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900"
+                />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-rose-500 text-white tracking-wider">
+                    👑 Juara 1
+                  </span>
+                  <span className="text-[11px] font-black text-amber-300">
+                    Ranger Merah
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-white truncate max-w-[170px] sm:max-w-[240px]">
+                  {winner.name}
+                </h3>
+                <span className="text-xs font-black text-emerald-400 tabular-nums">
+                  Total: {winner.totalScore > 0 ? `+${winner.totalScore}` : winner.totalScore} Poin
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => playVictorySound()}
+              className="px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-amber-400 hover:text-amber-300 text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 shrink-0 shadow-sm"
+              title="Mainkan ulang suara kemenangan"
+            >
+              <Volume2 size={16} />
+              <span className="hidden sm:inline">Bunyi Fanfare</span>
+            </button>
+          </div>
+        )}
+
         {/* Pilihan Ukuran Rasio Potret: 9:16 vs 3:4 */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-100 dark:bg-slate-800/80 p-2 rounded-2xl border border-slate-200 dark:border-slate-700 gap-2">
           <span className="text-xs font-bold text-slate-600 dark:text-slate-300 pl-1">
-            Format Potret:
+            Format Gambar:
           </span>
           <div className="flex items-center gap-1.5 w-full sm:w-auto">
             <button
@@ -549,7 +646,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
           </div>
         </div>
 
-        {/* Preview Gambar dengan Aspek Rasio Dinamis Potret */}
+        {/* GAMBAR YANG SIAP DIBAGIKAN KE LAYAR */}
         <div
           className={`relative w-full max-w-[280px] sm:max-w-[320px] mx-auto ${
             aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-[3/4]'
@@ -558,7 +655,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
           {isGenerating ? (
             <div className="flex flex-col items-center gap-3 text-slate-400 py-12">
               <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs font-semibold">Meracik Kartu Potret ({aspectRatio})...</span>
+              <span className="text-xs font-semibold">Meracik Gambar Siap Bagikan ({aspectRatio})...</span>
             </div>
           ) : imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -576,13 +673,13 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
 
           {/* Badge Format di sudut */}
           <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-slate-700/60 text-[10px] font-black text-amber-400 tracking-wider">
-            {aspectRatio === '9:16' ? 'POTRET 9:16 (1080×1920)' : 'POTRET 3:4 (900×1200)'}
+            {aspectRatio === '9:16' ? 'POTRET 9:16' : 'POTRET 3:4'}
           </div>
         </div>
 
         {/* Petunjuk Mobile */}
         <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center -mt-0.5">
-          💡 <strong>Tips di HP:</strong> Tekan & tahan (long-press) gambar di atas untuk langsung <em>&ldquo;Simpan Gambar ke Foto&rdquo;</em>.
+          💡 <strong>Tips di HP:</strong> Gambar di atas siap dibagikan atau tekan lama untuk langsung <em>&ldquo;Simpan Gambar ke Foto&rdquo;</em>.
         </p>
 
         {/* Tombol Aksi */}
@@ -594,7 +691,7 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
             className="btn-secondary py-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
           >
             <Download size={18} className="text-rose-500" />
-            <span>Simpan PNG ({aspectRatio})</span>
+            <span>Simpan PNG</span>
           </button>
 
           <button
@@ -616,6 +713,18 @@ export function VictoryShareModal({ isOpen, onClose, game }: VictoryShareModalPr
             )}
           </button>
         </div>
+
+        {/* Tombol Mulai Game Baru */}
+        {onNewGame && (
+          <button
+            type="button"
+            onClick={onNewGame}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 active:scale-95 transition-all mt-1"
+          >
+            <Play size={16} fill="currentColor" />
+            <span>Mulai Game Baru</span>
+          </button>
+        )}
       </div>
     </Modal>
   );
