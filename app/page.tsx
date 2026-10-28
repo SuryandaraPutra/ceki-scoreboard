@@ -345,10 +345,12 @@ export default function HomePage() {
           <InteractiveCekiCards />
 
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              KOCOK KEKAR
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+              <span className="bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-500 bg-clip-text text-transparent">
+                KOCOK KEKAR
+              </span>
             </h1>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-2 max-w-lg mx-auto font-medium italic">
+            <p className="text-sm sm:text-base text-emerald-100/90 mt-2 max-w-lg mx-auto font-medium italic drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
               &ldquo;Hidup itu kayak Ceki: kartu bagus belum tentu menang, kartu jelek belum tentu kalah, yang pasti tetangga sebelah selalu curang.&rdquo;
             </p>
           </div>
@@ -356,38 +358,44 @@ export default function HomePage() {
           {/* Tombol Utama Mulai Game */}
           <Link
             href="/game/new"
-            className="btn-primary py-4 px-8 text-base font-black flex items-center gap-2.5 shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all"
+            className="btn-primary py-4 px-9 text-base font-black flex items-center gap-2.5 shadow-2xl shadow-emerald-500/35 hover:scale-105 active:scale-95 transition-all border border-emerald-400/30"
           >
             <Play size={20} fill="currentColor" />
             <span>Mulai Game Baru</span>
           </Link>
 
           {/* Pintasan Menu Lain */}
-          <div className="grid grid-cols-3 gap-3 w-full max-w-md pt-4">
+          <div className="grid grid-cols-3 gap-3 w-full max-w-md pt-3">
             <Link
               href="/players"
-              className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-emerald-500 transition-colors"
+              className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-emerald-400/80 hover:scale-105 transition-all duration-200 group bg-slate-900/40 backdrop-blur-md border-emerald-500/20"
             >
-              <Users size={22} className="text-emerald-500" />
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                <Users size={22} />
+              </div>
+              <span className="text-xs font-bold text-white drop-shadow-sm">
                 Pemain
               </span>
             </Link>
             <Link
               href="/leaderboard"
-              className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-amber-500 transition-colors"
+              className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-amber-400/80 hover:scale-105 transition-all duration-200 group bg-slate-900/40 backdrop-blur-md border-amber-500/20"
             >
-              <Trophy size={22} className="text-amber-500" />
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                <Trophy size={22} />
+              </div>
+              <span className="text-xs font-bold text-white drop-shadow-sm">
                 Leaderboard
               </span>
             </Link>
             <Link
               href="/history"
-              className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-sky-500 transition-colors"
+              className="glass-card p-4 flex flex-col items-center gap-1.5 hover:border-sky-400/80 hover:scale-105 transition-all duration-200 group bg-slate-900/40 backdrop-blur-md border-sky-500/20"
             >
-              <History size={22} className="text-sky-500" />
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="w-10 h-10 rounded-2xl bg-sky-500/20 flex items-center justify-center text-sky-400 group-hover:scale-110 transition-transform">
+                <History size={22} />
+              </div>
+              <span className="text-xs font-bold text-white drop-shadow-sm">
                 Riwayat
               </span>
             </Link>
