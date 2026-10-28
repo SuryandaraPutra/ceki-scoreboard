@@ -7,7 +7,7 @@
  * - Halaman HTML saat offline : Fallback ke /offline jika jaringan putus.
  */
 
-const CACHE_NAME = 'ceki-scoreboard-v1';
+const CACHE_NAME = 'ceki-scoreboard-v3';
 
 const STATIC_ASSETS = [
   '/',

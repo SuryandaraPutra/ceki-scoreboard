@@ -51,7 +51,9 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function() {});
+                  navigator.serviceWorker.register('/sw.js?v=3').then(function(reg) {
+                    reg.update();
+                  }).catch(function() {});
                 });
               }
             `,

@@ -18,32 +18,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <div className="relative min-h-screen flex flex-col text-slate-900 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-200 overflow-x-hidden">
-        {/* Latar Belakang Kasino Realistis (White & Gold VIP High-Roller Casino Lounge) */}
-        <div
-          className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
-          style={{
-            backgroundImage: `radial-gradient(circle at 50% 35%, rgba(0, 0, 0, 0.28) 0%, rgba(15, 23, 42, 0.58) 55%, rgba(11, 17, 32, 0.86) 100%), url('/casino_bg.jpg')`,
-            backgroundAttachment: 'fixed',
-          }}
-        />
-
-        {/* Ambient Warm Golden Chandelier Glow */}
-        <div
-          className="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen"
-          style={{
-            background:
-              'radial-gradient(circle 700px at 50% 160px, rgba(245, 158, 11, 0.18), transparent 70%)',
-          }}
-        />
-
-        {/* Subtle Texture Overlay */}
-        <div
-          className="fixed inset-0 pointer-events-none z-0 opacity-[0.03] bg-repeat"
-          style={{
-            backgroundImage: `radial-gradient(#ffffff 1px, transparent 1px)`,
-            backgroundSize: '24px 24px',
-          }}
-        />
+        {/* Latar Belakang Foto Kasino User (Jernih & Terlihat Jelas) */}
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+          <img
+            src="/casino_vip_table.jpg?v=4"
+            alt="Latar Kasino VIP"
+            className="w-full h-full object-cover object-center select-none"
+          />
+          {/* Soft vignette & gradient overlay agar teks tetap berposisi sempurna & mudah terbaca */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-black/65" />
+        </div>
 
         <div className="relative z-10 flex flex-col min-h-screen">
           <OfflineBanner />
