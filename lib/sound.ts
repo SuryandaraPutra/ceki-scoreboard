@@ -213,3 +213,84 @@ export function playVictorySound(volume = 0.85) {
   // Coba mainkan langsung, dengan fallback 3 retry @ 150ms
   tryPlay(3);
 }
+
+function runHangusNotes(ctx: AudioContext, volume = 0.8) {
+  try {
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(Math.min(Math.max(volume, 0), 1), now);
+    masterGain.connect(ctx.destination);
+
+    // 1. Descending slide sound (slide from 420Hz down to 80Hz)
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(420, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.6);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.4, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.7);
+
+    // 2. Heavy impact thud at the end (t = 0.45s)
+    const thudOsc = ctx.createOscillator();
+    const thudGain = ctx.createGain();
+    thudOsc.type = 'sine';
+    thudOsc.frequency.setValueAtTime(110, now + 0.45);
+    thudOsc.frequency.exponentialRampToValueAtTime(35, now + 0.9);
+
+    thudGain.gain.setValueAtTime(0.001, now + 0.45);
+    thudGain.gain.linearRampToValueAtTime(0.5, now + 0.5);
+    thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+
+    thudOsc.connect(thudGain);
+    thudGain.connect(masterGain);
+    thudOsc.start(now + 0.45);
+    thudOsc.stop(now + 1.0);
+  } catch (err) {
+    console.warn('Gagal memainkan nada hangus:', err);
+  }
+}
+
+/**
+ * Mainkan Efek Suara Skor Hangus / Balap 100+ Menjadi 0
+ */
+export function playHangusSound(volume = 0.8) {
+  if (typeof window === 'undefined') return;
+
+  const tryPlay = (attemptsLeft: number) => {
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+
+      if (ctx.state === 'suspended') {
+        ctx
+          .resume()
+          .then(() => {
+            setTimeout(() => runHangusNotes(ctx, volume), 80);
+          })
+          .catch(() => {
+            if (attemptsLeft > 0) {
+              setTimeout(() => tryPlay(attemptsLeft - 1), 150);
+            }
+          });
+        return;
+      }
+
+      runHangusNotes(ctx, volume);
+    } catch (e) {
+      console.warn('Audio playback error:', e);
+      if (attemptsLeft > 0) {
+        setTimeout(() => tryPlay(attemptsLeft - 1), 150);
+      }
+    }
+  };
+
+  tryPlay(3);
+}
+

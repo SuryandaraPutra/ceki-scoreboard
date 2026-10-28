@@ -7,9 +7,10 @@ import { db } from './db';
 import { gamePlayers, players, rounds, roundScores } from './schema';
 import { eq } from 'drizzle-orm';
 import {
-  calculateScores,
+  calculateScoresDetailed,
   RoundData,
   type PlayerScore,
+  type RoundResetDetail,
 } from './calc';
 
 export interface GameFullData {
@@ -19,6 +20,9 @@ export interface GameFullData {
   playerPhotoVersions: Record<number, number>;
   rounds: RoundData[];
   scores: PlayerScore[];
+  roundResets: Record<number, number[]>;
+  resetDetails: RoundResetDetail[];
+  latestRoundResets: RoundResetDetail[];
 }
 
 /**
@@ -83,8 +87,8 @@ export async function getGameFullData(
     (a, b) => a.roundNo - b.roundNo
   );
 
-  // Hitung skor
-  const scores = calculateScores(
+  // Hitung skor terperinci dengan aturan balap 100+
+  const detailed = calculateScoresDetailed(
     playerIds,
     playerNames,
     initialScore,
@@ -98,6 +102,9 @@ export async function getGameFullData(
     playerColors,
     playerPhotoVersions,
     rounds: roundDataList,
-    scores,
+    scores: detailed.players,
+    roundResets: detailed.roundResets,
+    resetDetails: detailed.resetDetails,
+    latestRoundResets: detailed.latestRoundResets,
   };
 }

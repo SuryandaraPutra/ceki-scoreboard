@@ -15,6 +15,24 @@ export interface PlayerScore {
   totalScore: number;
   rank: number;         // 1-based, seri = rank sama
   roundScores: number[]; // skor per round (index = roundNo - 1)
+  resetRounds?: number[]; // round di mana pemain ini di-reset ke 0 karena terbalap lawan
+}
+
+export interface RoundResetDetail {
+  roundNo: number;
+  playerId: number;
+  playerName: string;
+  scoreBeforeReset: number;
+  overtakenByPlayerId: number;
+  overtakenByPlayerName: string;
+  overtakerScore: number;
+}
+
+export interface DetailedGameScores {
+  players: PlayerScore[];
+  roundResets: Record<number, number[]>; // roundNo -> array playerId yang hangus ke 0
+  resetDetails: RoundResetDetail[]; // detail lengkap tiap kejadian balap
+  latestRoundResets: RoundResetDetail[]; // detail balap pada round paling akhir
 }
 
 export interface RoundData {
@@ -66,39 +84,96 @@ export interface Records {
 // ─────────────────────────────────────────────
 
 /**
- * Hitung total skor dan peringkat semua pemain dari data round.
+ * Hitung kalkulasi skor terperinci beserta kejadian balap (overtake) skor 100 ke atas.
  *
- * @param playerIds - Array 4 player ID (urutan seat)
- * @param playerNames - Map playerId → nama
- * @param initialScore - Skor awal tiap pemain
- * @param rounds - Data semua round
- * @param winCondition - 'highest' atau 'lowest'
- * @returns Array PlayerScore terurut berdasarkan peringkat
+ * Aturan Balap 100+:
+ * Apabila seorang pemain berada pada skor 100 ke atas (baik sebelum round atau setelah penambahan poin round ini),
+ * lalu pemain lawan yang tadinya di bawah atau sejajar membalapnya dengan selisih >= 5 poin di atasnya,
+ * maka pemain yang terbalap skornya otomatis menjadi 0!
+ * (Jika skor akhir sama/seri, misal 150 dan 150, tidak di-reset karena tidak ada selisih).
  */
-export function calculateScores(
+export function calculateScoresDetailed(
   playerIds: number[],
   playerNames: Record<number, string>,
   initialScore: number,
   rounds: RoundData[],
   winCondition: 'highest' | 'lowest'
-): PlayerScore[] {
-  // Hitung total skor tiap pemain
+): DetailedGameScores {
   const totals: Record<number, number> = {};
   const roundScoresByPlayer: Record<number, number[]> = {};
+  const resetRoundsByPlayer: Record<number, number[]> = {};
 
   for (const pid of playerIds) {
     totals[pid] = initialScore;
     roundScoresByPlayer[pid] = [];
+    resetRoundsByPlayer[pid] = [];
   }
 
   // Susun round berdasarkan roundNo agar urutan konsisten
   const sortedRounds = [...rounds].sort((a, b) => a.roundNo - b.roundNo);
+  const roundResetsMap: Record<number, number[]> = {};
+  const allResetDetails: RoundResetDetail[] = [];
 
   for (const round of sortedRounds) {
+    const prevTotals = { ...totals };
+    const tempTotals: Record<number, number> = {};
+
     for (const pid of playerIds) {
       const score = round.scores[pid] ?? 0;
-      totals[pid] += score;
+      tempTotals[pid] = prevTotals[pid] + score;
       roundScoresByPlayer[pid].push(score);
+    }
+
+    const resetPidsThisRound = new Set<number>();
+    const detailsThisRound: RoundResetDetail[] = [];
+
+    // Aturan Balap 100+: hanya berlaku pada mode skor tertinggi
+    if (winCondition === 'highest') {
+      for (const pidA of playerIds) {
+        // Pemain A sudah berada pada skor 100 ke atas sebelum round ini
+        const isAbove100 = prevTotals[pidA] >= 100;
+        if (!isAbove100) continue;
+
+        // Cek apakah ada lawan B yang membalap pemain A dengan selisih >= 5 poin
+        for (const pidB of playerIds) {
+          if (pidA === pidB) continue;
+
+          // Pemain B awalnya berada di bawah atau sejajar pemain A sebelum round ini
+          const wasBehindOrTied = prevTotals[pidA] >= prevTotals[pidB];
+
+          // Dan sekarang pemain B berada di atas pemain A dengan selisih >= 5 poin
+          const isOvertakenBy5 = tempTotals[pidB] >= tempTotals[pidA] + 5;
+
+          if (wasBehindOrTied && isOvertakenBy5) {
+            resetPidsThisRound.add(pidA);
+            detailsThisRound.push({
+              roundNo: round.roundNo,
+              playerId: pidA,
+              playerName: playerNames[pidA] ?? `Pemain ${pidA}`,
+              scoreBeforeReset: tempTotals[pidA],
+              overtakenByPlayerId: pidB,
+              overtakenByPlayerName: playerNames[pidB] ?? `Pemain ${pidB}`,
+              overtakerScore: tempTotals[pidB],
+            });
+            break; // Pemain A sudah pasti di-reset ke 0 untuk round ini
+          }
+        }
+      }
+    }
+
+    // Terapkan reset ke 0 untuk pemain yang terbalap pada round ini
+    for (const pid of playerIds) {
+      if (resetPidsThisRound.has(pid)) {
+        totals[pid] = 0;
+        resetRoundsByPlayer[pid].push(round.roundNo);
+      } else {
+        totals[pid] = tempTotals[pid];
+      }
+    }
+
+    if (resetPidsThisRound.size > 0) {
+      roundResetsMap[round.roundNo] = Array.from(resetPidsThisRound);
+      allResetDetails.push(...detailsThisRound);
     }
   }
 
@@ -119,13 +194,50 @@ export function calculateScores(
     ranks[sorted[i]] = currentRank;
   }
 
-  return sorted.map((pid) => ({
+  const playersResult: PlayerScore[] = sorted.map((pid) => ({
     playerId: pid,
     playerName: playerNames[pid] ?? `Pemain ${pid}`,
     totalScore: totals[pid],
     rank: ranks[pid],
     roundScores: roundScoresByPlayer[pid],
+    resetRounds: resetRoundsByPlayer[pid],
   }));
+
+  const lastRoundNo = sortedRounds.length > 0 ? sortedRounds[sortedRounds.length - 1].roundNo : 0;
+  const latestRoundResets = allResetDetails.filter((d) => d.roundNo === lastRoundNo);
+
+  return {
+    players: playersResult,
+    roundResets: roundResetsMap,
+    resetDetails: allResetDetails,
+    latestRoundResets,
+  };
+}
+
+/**
+ * Hitung total skor dan peringkat semua pemain dari data round.
+ *
+ * @param playerIds - Array 4 player ID (urutan seat)
+ * @param playerNames - Map playerId → nama
+ * @param initialScore - Skor awal tiap pemain
+ * @param rounds - Data semua round
+ * @param winCondition - 'highest' atau 'lowest'
+ * @returns Array PlayerScore terurut berdasarkan peringkat
+ */
+export function calculateScores(
+  playerIds: number[],
+  playerNames: Record<number, string>,
+  initialScore: number,
+  rounds: RoundData[],
+  winCondition: 'highest' | 'lowest'
+): PlayerScore[] {
+  return calculateScoresDetailed(
+    playerIds,
+    playerNames,
+    initialScore,
+    rounds,
+    winCondition
+  ).players;
 }
 
 /**

@@ -155,6 +155,15 @@ export async function POST(req: NextRequest, { params }: Params) {
       isAutoFinished = true;
     }
 
+    const latestResets = fullData.latestRoundResets ?? [];
+    let customMessage = `Round ${nextRoundNo} berhasil disimpan`;
+    if (latestResets.length > 0) {
+      const resetDescriptions = latestResets
+        .map((r) => `${r.playerName} (${r.scoreBeforeReset} → 0)`)
+        .join(', ');
+      customMessage = `Round ${nextRoundNo} disimpan! ⚠️ Skor ${resetDescriptions} hangus jadi 0 karena terbalap!`;
+    }
+
     return NextResponse.json({
       data: {
         roundNo: nextRoundNo,
@@ -163,8 +172,9 @@ export async function POST(req: NextRequest, { params }: Params) {
         hasReachedScoreLimit: limitReachedPlayerIds.length > 0,
         playersReachedLimit: limitReachedPlayerIds,
         isAutoFinished,
+        overtakeResets: latestResets,
       },
-      message: `Round ${nextRoundNo} berhasil disimpan`,
+      message: customMessage,
     });
   } catch (error) {
     console.error('Error in POST /api/games/[id]/rounds:', error);

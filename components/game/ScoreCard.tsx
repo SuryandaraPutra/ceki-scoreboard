@@ -24,6 +24,8 @@ interface ScoreCardProps {
     rank: number;
     progress: number;
     hasReachedLimit: boolean;
+    wasResetToZero?: boolean;
+    resetRounds?: number[];
   };
   currentRoundScore: number;
   onScoreChange: (score: number) => void;
@@ -115,9 +117,16 @@ export function ScoreCard({
       {/* Total Skor & Progress Bar Batas */}
       <div className="bg-slate-100/70 dark:bg-slate-850/70 rounded-2xl p-3 mb-3 border border-slate-200/40 dark:border-slate-750">
         <div className="flex items-baseline justify-between mb-1.5">
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            Total Skor
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              Total Skor
+            </span>
+            {player.wasResetToZero && player.totalScore === 0 && (
+              <span className="text-[10px] font-extrabold text-rose-500 bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.5 rounded-full animate-pulse">
+                💥 Hangus
+              </span>
+            )}
+          </div>
           <span
             className={`text-2xl sm:text-3xl font-black tabular-nums transition-transform ${
               player.totalScore > 0

@@ -41,7 +41,8 @@ import {
 import { toast } from 'sonner';
 import { TableScreenModal } from '@/components/game/TableScreenModal';
 import { VictoryShareModal } from '@/components/game/VictoryShareModal';
-import { unlockAudio } from '@/lib/sound';
+import { unlockAudio, playHangusSound } from '@/lib/sound';
+import { vibrate } from '@/lib/constants';
 
 export default function HomePage() {
   const router = useRouter();
@@ -193,7 +194,19 @@ export default function HomePage() {
       }
       setCurrentRoundScores(resetScores);
 
-      toast.success(res?.message || 'Round berhasil disimpan!');
+      if (res?.overtakeResets && res.overtakeResets.length > 0) {
+        playHangusSound();
+        vibrate([100, 80, 200, 80, 300]);
+        const details = res.overtakeResets
+          .map(
+            (r: any) =>
+              `${r.playerName} (${r.scoreBeforeReset} → 0) terbalap oleh ${r.overtakenByPlayerName} (${r.overtakerScore})`
+          )
+          .join(', ');
+        toast.error(`💥 SKOR HANGUS JADI 0! ${details}`, { duration: 6000 });
+      } else {
+        toast.success(res?.message || 'Round berhasil disimpan!');
+      }
 
       // Jika batas skor tercapai dan aksi adalah 'auto', game otomatis selesai
       if (res?.isAutoFinished) {
@@ -598,6 +611,7 @@ export default function HomePage() {
         onEditRound={updateRound}
         onDeleteRound={deleteRound}
         isZeroSum={game.zeroSum}
+        roundResets={game.roundResets}
       />
 
       {/* MODAL ATUR BATAS SKOR */}

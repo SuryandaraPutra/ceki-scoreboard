@@ -16,6 +16,8 @@ export interface ActiveGamePlayer {
   totalScore: number;
   rank: number;
   roundScores: number[];
+  resetRounds?: number[];
+  wasResetToZero?: boolean;
   progress: number;
   hasReachedLimit: boolean;
 }
@@ -40,6 +42,7 @@ export interface ActiveGameData {
   createdAt: number;
   players: ActiveGamePlayer[];
   rounds: ActiveGameRound[];
+  roundResets?: Record<number, number[]>;
   hasReachedScoreLimit: boolean;
   playersReachedLimit: number[];
 }

@@ -31,6 +31,7 @@ interface RoundHistoryTableProps {
   onEditRound: (roundNo: number, scores: Record<number, number>) => Promise<any>;
   onDeleteRound: (roundNo: number) => Promise<any>;
   isZeroSum?: boolean;
+  roundResets?: Record<number, number[]>;
 }
 
 export function RoundHistoryTable({
@@ -40,6 +41,7 @@ export function RoundHistoryTable({
   onEditRound,
   onDeleteRound,
   isZeroSum,
+  roundResets,
 }: RoundHistoryTableProps) {
   const [editingRound, setEditingRound] = useState<RoundItem | null>(null);
   const [editScores, setEditScores] = useState<Record<number, number>>({});
@@ -159,6 +161,7 @@ export function RoundHistoryTable({
                   </td>
                   {players.map((p) => {
                     const score = r.scores[p.id] ?? 0;
+                    const isReset = roundResets?.[r.roundNo]?.includes(p.id);
                     return (
                       <td
                         key={p.id}
@@ -170,7 +173,17 @@ export function RoundHistoryTable({
                             : 'text-slate-400'
                         }`}
                       >
-                        {score > 0 ? `+${score}` : score}
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span>{score > 0 ? `+${score}` : score}</span>
+                          {isReset && (
+                            <span
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-black bg-rose-500/15 text-rose-500 dark:bg-rose-500/25 dark:text-rose-400 border border-rose-500/30 whitespace-nowrap"
+                              title="Skor hangus menjadi 0 karena terbalap lawan selisih >= 5 poin"
+                            >
+                              💥 Jadi 0
+                            </span>
+                          )}
+                        </div>
                       </td>
                     );
                   })}

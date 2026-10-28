@@ -59,6 +59,8 @@ export async function GET() {
         totalScore: calc.totalScore,
         rank: calc.rank,
         roundScores: calc.roundScores,
+        resetRounds: calc.resetRounds ?? [],
+        wasResetToZero: (calc.resetRounds?.length ?? 0) > 0,
         progress: Math.min(progress, 1),
         hasReachedLimit: reachedLimitPlayerIds.includes(pid),
       };
@@ -82,6 +84,7 @@ export async function GET() {
         createdAt: activeGame.createdAt,
         players: playersWithScores,
         rounds: fullData.rounds,
+        roundResets: fullData.roundResets,
         hasReachedScoreLimit: reachedLimitPlayerIds.length > 0,
         playersReachedLimit: reachedLimitPlayerIds,
       },
