@@ -18,27 +18,27 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <div className="relative min-h-screen flex flex-col text-slate-900 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-200 overflow-x-hidden">
-        {/* Latar Belakang Kasino Realistis (Casino VIP Table & Lounge) */}
+        {/* Latar Belakang Kasino Realistis (White & Gold VIP High-Roller Casino Lounge) */}
         <div
           className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
           style={{
-            backgroundImage: `radial-gradient(circle at 50% 30%, rgba(6, 78, 59, 0.45) 0%, rgba(2, 44, 34, 0.78) 50%, rgba(2, 20, 15, 0.94) 85%, rgba(1, 12, 9, 0.98) 100%), url('/casino_bg.jpg')`,
+            backgroundImage: `radial-gradient(circle at 50% 35%, rgba(0, 0, 0, 0.28) 0%, rgba(15, 23, 42, 0.58) 55%, rgba(11, 17, 32, 0.86) 100%), url('/casino_bg.jpg')`,
             backgroundAttachment: 'fixed',
           }}
         />
 
-        {/* Ambient Casino Lighting: Warm Chandelier Center Pool & Table Glow */}
+        {/* Ambient Warm Golden Chandelier Glow */}
         <div
           className="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen"
           style={{
             background:
-              'radial-gradient(circle 650px at 50% 200px, rgba(245, 158, 11, 0.2), transparent 70%), radial-gradient(circle 800px at 50% 85%, rgba(16, 185, 129, 0.15), transparent 70%)',
+              'radial-gradient(circle 700px at 50% 160px, rgba(245, 158, 11, 0.18), transparent 70%)',
           }}
         />
 
-        {/* Subtle Casino Table Felt Micro-texture */}
+        {/* Subtle Texture Overlay */}
         <div
-          className="fixed inset-0 pointer-events-none z-0 opacity-[0.035] bg-repeat"
+          className="fixed inset-0 pointer-events-none z-0 opacity-[0.03] bg-repeat"
           style={{
             backgroundImage: `radial-gradient(#ffffff 1px, transparent 1px)`,
             backgroundSize: '24px 24px',
