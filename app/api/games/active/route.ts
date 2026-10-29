@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbReady } from '@/lib/db';
 import { games } from '@/lib/schema';
 import { getGameFullData } from '@/lib/game-queries';
 import { checkScoreLimit, calculateProgress, parseQuickValues } from '@/lib/calc';
@@ -17,6 +17,7 @@ export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
   try {
+    await ensureDbReady();
     const searchParams = req.nextUrl.searchParams;
     const room = searchParams.get('room') || '1';
 

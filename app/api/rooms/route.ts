@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbReady } from '@/lib/db';
 import { games, gamePlayers, players, rounds, roundScores } from '@/lib/schema';
 import { calculateScores } from '@/lib/calc';
 import { eq, inArray } from 'drizzle-orm';
@@ -23,6 +23,7 @@ const DEFAULT_ROOMS = [
 
 export async function GET() {
   try {
+    await ensureDbReady();
     // Ambil semua game yang berstatus 'active'
     const activeGames = await db
       .select()

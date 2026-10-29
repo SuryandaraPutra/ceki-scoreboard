@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbReady } from '@/lib/db';
 import { games, gamePlayers, players, rounds, roundScores } from '@/lib/schema';
 import { CreateGameSchema, makeError } from '@/lib/validations';
 import { getOrCreateSettings, parseQuickValues } from '@/lib/settings';
@@ -21,6 +21,7 @@ export const runtime = 'nodejs';
  */
 export async function GET(req: NextRequest) {
   try {
+    await ensureDbReady();
     const searchParams = req.nextUrl.searchParams;
     const status = searchParams.get('status') || 'finished';
     const roomParam = searchParams.get('room');
@@ -142,6 +143,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
+    await ensureDbReady();
     const body = await req.json();
     const discardActive = Boolean(body.discardActive);
 
@@ -264,8 +266,8 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in POST /api/games:', error);
-    return makeError('INTERNAL_ERROR', 'Gagal membuat game baru', 500);
+    return makeError('INTERNAL_ERROR', error?.message || 'Gagal membuat game baru', 500);
   }
 }

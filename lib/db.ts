@@ -148,14 +148,21 @@ export async function ensureDbSchema(): Promise<void> {
   const client = rawClient;
   await client.executeMultiple(SCHEMA_SQL);
   try {
-    const tableInfo = await client.execute('PRAGMA table_info(games)');
-    const hasRoom = tableInfo.rows.some((row: any) => row.name === 'room');
-    if (!hasRoom) {
-      await client.execute("ALTER TABLE games ADD COLUMN room TEXT NOT NULL DEFAULT '1'");
-    }
+    await client.execute("ALTER TABLE games ADD COLUMN room TEXT NOT NULL DEFAULT '1'");
   } catch (e) {
-    // Abaikan jika database remote tidak support pragma atau sudah ada
+    // Abaikan jika kolom sudah ada
   }
+}
+
+let dbInitialized: Promise<void> | null = null;
+export async function ensureDbReady(): Promise<void> {
+  if (!dbInitialized) {
+    dbInitialized = ensureDbSchema().catch((err) => {
+      dbInitialized = null;
+      console.error('ensureDbSchema error:', err);
+    });
+  }
+  await dbInitialized;
 }
 
 export { schema };
