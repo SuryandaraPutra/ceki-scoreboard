@@ -10,7 +10,7 @@ import { games, gamePlayers, players, rounds, roundScores } from '@/lib/schema';
 import { CreateGameSchema, makeError } from '@/lib/validations';
 import { getOrCreateSettings, parseQuickValues } from '@/lib/settings';
 import { calculateScores } from '@/lib/calc';
-import { eq, desc, sql, inArray } from 'drizzle-orm';
+import { eq, desc, sql, inArray, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -23,12 +23,18 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const status = searchParams.get('status') || 'finished';
+    const roomParam = searchParams.get('room');
 
-    // Ambil game dengan status yang diminta
+    // Ambil game dengan status yang diminta (dan opsional filter room)
+    const conditions = [eq(games.status, status)];
+    if (roomParam) {
+      conditions.push(eq(games.room, roomParam));
+    }
+
     const gameList = await db
       .select()
       .from(games)
-      .where(eq(games.status, status))
+      .where(and(...conditions))
       .orderBy(desc(games.createdAt))
       .limit(50);
 
@@ -97,6 +103,7 @@ export async function GET(req: NextRequest) {
       return {
         id: game.id,
         name: game.name,
+        room: game.room,
         status: game.status,
         winCondition: game.winCondition,
         initialScore: game.initialScore,
@@ -143,6 +150,7 @@ export async function POST(req: NextRequest) {
 
     const parsed = CreateGameSchema.safeParse({
       name: body.name,
+      room: body.room ? String(body.room) : '1',
       playerIds: body.playerIds,
       initialScore: body.initialScore ?? appSettings.defaultInitialScore,
       winCondition: body.winCondition ?? appSettings.defaultWinCondition,
@@ -171,6 +179,7 @@ export async function POST(req: NextRequest) {
 
     const {
       name,
+      room,
       playerIds,
       initialScore,
       winCondition,
@@ -181,23 +190,23 @@ export async function POST(req: NextRequest) {
       targetRounds,
     } = parsed.data;
 
-    // Cek apakah ada game aktif yang sedang berjalan
+    // Cek apakah ada game aktif yang sedang berjalan di room ini
     const [activeGame] = await db
-      .select({ id: games.id, name: games.name })
+      .select({ id: games.id, name: games.name, room: games.room })
       .from(games)
-      .where(eq(games.status, 'active'))
+      .where(and(eq(games.status, 'active'), eq(games.room, room)))
       .limit(1);
 
     if (activeGame) {
       if (!discardActive) {
         return makeError(
           'ACTIVE_GAME_EXISTS',
-          `Masih ada game aktif (#${activeGame.id}${activeGame.name ? ' - ' + activeGame.name : ''}). Selesaikan atau buang game tersebut terlebih dahulu.`,
+          `Masih ada game aktif di Meja ${room} (#${activeGame.id}${activeGame.name ? ' - ' + activeGame.name : ''}). Selesaikan atau buang game tersebut terlebih dahulu.`,
           409
         );
       }
 
-      // Pengguna memilih membuang game aktif sebelumnya
+      // Pengguna memilih membuang game aktif sebelumnya di room ini
       await db
         .update(games)
         .set({
@@ -228,6 +237,7 @@ export async function POST(req: NextRequest) {
       .values({
         name: name || null,
         status: 'active',
+        room,
         winCondition,
         initialScore,
         scoreLimit: scoreLimit ?? null,

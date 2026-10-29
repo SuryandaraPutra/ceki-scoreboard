@@ -8,24 +8,34 @@
  * - Konfirmasi jika masih ada game aktif
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePlayers } from '@/hooks/usePlayers';
 import { useActiveGame } from '@/hooks/useActiveGame';
 import { useSettings } from '@/hooks/useSettings';
+import { useRooms } from '@/hooks/useRooms';
 import { Avatar } from '@/components/ui/Avatar';
 import { PlayerModal } from '@/components/player/PlayerModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PinLockModal } from '@/components/ui/PinLockModal';
 import { SCORE_LIMIT_PRESETS, QUICK_VALUE_PRESETS } from '@/lib/constants';
-import { Plus, Check, Play, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Plus, Check, Play, AlertCircle, ArrowLeft, Layers } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
 export default function NewGamePage() {
   const router = useRouter();
+  const { rooms, currentRoom, selectRoom } = useRooms();
+  const [selectedRoom, setSelectedRoom] = useState<string>(currentRoom);
+
+  useEffect(() => {
+    if (currentRoom) {
+      setSelectedRoom(currentRoom);
+    }
+  }, [currentRoom]);
+
   const { activePlayers, createPlayer, isLoading: isPlayersLoading } = usePlayers();
-  const { game: activeGame, finishGame } = useActiveGame();
+  const { game: activeGame, finishGame } = useActiveGame(selectedRoom);
   const { settings } = useSettings();
 
   // Form State
@@ -134,6 +144,7 @@ export default function NewGamePage() {
 
       const payload = {
         name: gameName.trim() || undefined,
+        room: selectedRoom,
         playerIds: selectedPlayerIds,
         initialScore: Number(initialScore) || 0,
         winCondition,
@@ -156,8 +167,9 @@ export default function NewGamePage() {
         throw new Error(result.error?.message || 'Gagal membuat game baru');
       }
 
-      toast.success('Game baru berhasil dimulai!');
-      router.push('/');
+      selectRoom(selectedRoom);
+      toast.success(`Game baru di Meja ${selectedRoom} berhasil dimulai!`);
+      router.push(`/?room=${selectedRoom}`);
     } catch (err: any) {
       toast.error(err.message || 'Terjadi kesalahan');
     } finally {
@@ -185,19 +197,85 @@ export default function NewGamePage() {
         </div>
       </div>
 
-      {/* Peringatan jika masih ada game aktif */}
+      {/* Pemilihan Room / Meja Permainan */}
+      <div className="glass-card p-4 sm:p-5 flex flex-col gap-3 border border-slate-200/80 dark:border-slate-800/80">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Layers size={18} className="text-emerald-500" />
+            <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+              Pilih Meja Permainan
+            </span>
+          </div>
+          <span className="text-[11px] text-slate-400">
+            Pilih meja kosong untuk bermain terpisah
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          {rooms.map((room) => {
+            const isSelected = room.id === selectedRoom;
+            const isActive = room.status === 'active';
+
+            return (
+              <button
+                key={room.id}
+                type="button"
+                onClick={() => {
+                  setSelectedRoom(room.id);
+                  selectRoom(room.id);
+                }}
+                className={`p-3 rounded-2xl border text-left flex flex-col justify-between gap-1.5 transition-all ${
+                  isSelected
+                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-500/20 ring-2 ring-emerald-500/30'
+                    : 'bg-white/80 dark:bg-slate-900/80 border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`font-black text-sm ${isSelected ? 'text-white' : 'text-slate-900 dark:text-slate-100'}`}>
+                    {room.name}
+                  </span>
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      isActive
+                        ? isSelected
+                          ? 'bg-white animate-pulse'
+                          : 'bg-emerald-500 animate-pulse'
+                        : isSelected
+                        ? 'bg-emerald-300'
+                        : 'bg-slate-300 dark:bg-slate-600'
+                    }`}
+                  />
+                </div>
+                <span
+                  className={`text-[11px] font-bold ${
+                    isSelected
+                      ? 'text-emerald-100'
+                      : isActive
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-slate-400 dark:text-slate-500'
+                  }`}
+                >
+                  {isActive ? '● Ada Game Aktif' : '✓ Meja Kosong'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Peringatan jika masih ada game aktif di meja ini */}
       {activeGame && (
         <div className="p-4 rounded-3xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 flex items-start gap-3 text-amber-900 dark:text-amber-200 text-xs">
           <AlertCircle size={20} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
           <div className="flex-1">
-            <span className="font-bold text-sm block">Masih Ada Game Berjalan!</span>
+            <span className="font-bold text-sm block">Meja {selectedRoom} Sedang Ada Game Aktif!</span>
             <span>
-              Game #{activeGame.id} {activeGame.name ? `("${activeGame.name}")` : ''} sedang aktif.
-              Memulai game baru akan meminta Anda mengakhiri atau membuang game tersebut.
+              Game #{activeGame.id} {activeGame.name ? `("${activeGame.name}")` : ''} sedang berjalan di Meja {selectedRoom}.
+              Jika ingin berhitung di game baru tanpa mengganggu game ini, pilih <strong>Meja Kosong</strong> di atas.
             </span>
             <div className="mt-2 flex gap-2">
-              <Link href="/" className="font-extrabold underline text-emerald-600 dark:text-emerald-400">
-                Kembali & Lanjutkan Game
+              <Link href={`/?room=${selectedRoom}`} className="font-extrabold underline text-emerald-600 dark:text-emerald-400">
+                Kembali & Lanjutkan Game Meja {selectedRoom}
               </Link>
             </div>
           </div>
@@ -529,12 +607,12 @@ export default function NewGamePage() {
         isOpen={activeGameConflict}
         onClose={() => setActiveGameConflict(false)}
         onConfirm={async () => {
-          await handleCreateGame(true); // Buang game aktif lama
+          await handleCreateGame(true); // Buang game aktif lama di meja ini
         }}
-        title="Masih Ada Game Aktif"
-        message={`Game #${activeGame?.id} masih sedang berjalan.\n\nApakah Anda ingin membuang/mengakhiri game lama tersebut dan memulai game baru ini?`}
+        title={`Masih Ada Game Aktif di Meja ${selectedRoom}`}
+        message={`Game #${activeGame?.id} masih sedang berjalan di Meja ${selectedRoom}.\n\nApakah Anda ingin membuang/mengakhiri game lama tersebut di Meja ${selectedRoom} dan memulai game baru?`}
         confirmText="Buang Game Lama & Mulai Baru"
-        cancelText="Batal"
+        cancelText="Batal (Pilih Meja Lain)"
         isDanger
       />
 

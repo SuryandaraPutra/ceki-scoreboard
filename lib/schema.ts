@@ -59,6 +59,8 @@ export const games = sqliteTable('games', {
   name: text('name'), // nama game opsional
   /** Status: 'active' | 'finished' */
   status: text('status').notNull().default('active'),
+  /** Room / Meja: '1' | '2' (default '1') */
+  room: text('room').notNull().default('1'),
   /** Aturan menang: 'highest' | 'lowest' */
   winCondition: text('win_condition').notNull().default('highest'),
   /** Skor awal tiap pemain */

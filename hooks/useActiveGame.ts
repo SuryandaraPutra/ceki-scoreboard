@@ -30,6 +30,7 @@ export interface ActiveGameRound {
 export interface ActiveGameData {
   id: number;
   name: string | null;
+  room?: string;
   status: 'active' | 'finished';
   winCondition: 'highest' | 'lowest';
   initialScore: number;
@@ -49,9 +50,9 @@ export interface ActiveGameData {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function useActiveGame() {
+export function useActiveGame(room: string = '1') {
   const { data, error, isLoading, mutate } = useSWR<{ data: ActiveGameData | null }>(
-    '/api/games/active',
+    `/api/games/active?room=${encodeURIComponent(room)}`,
     fetcher,
     {
       // Polling tiap 5 detik

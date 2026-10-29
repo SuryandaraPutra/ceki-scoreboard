@@ -51,6 +51,11 @@ export const CreateGameSchema = z.object({
     .trim()
     .max(50, 'Nama game maksimal 50 karakter')
     .optional(),
+  room: z
+    .string()
+    .trim()
+    .min(1, 'Pilihan room tidak valid')
+    .default('1'),
   playerIds: z
     .array(z.number().int().positive())
     .length(4, 'Harus memilih tepat 4 pemain')

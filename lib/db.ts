@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS games (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT,
   status TEXT NOT NULL DEFAULT 'active',
+  room TEXT NOT NULL DEFAULT '1',
   win_condition TEXT NOT NULL DEFAULT 'highest',
   initial_score INTEGER NOT NULL DEFAULT 0,
   score_limit INTEGER DEFAULT 250,
@@ -146,6 +147,15 @@ if (process.env.NODE_ENV === 'production') {
 export async function ensureDbSchema(): Promise<void> {
   const client = rawClient;
   await client.executeMultiple(SCHEMA_SQL);
+  try {
+    const tableInfo = await client.execute('PRAGMA table_info(games)');
+    const hasRoom = tableInfo.rows.some((row: any) => row.name === 'room');
+    if (!hasRoom) {
+      await client.execute("ALTER TABLE games ADD COLUMN room TEXT NOT NULL DEFAULT '1'");
+    }
+  } catch (e) {
+    // Abaikan jika database remote tidak support pragma atau sudah ada
+  }
 }
 
 export { schema };

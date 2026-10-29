@@ -7,16 +7,21 @@
  * - prefers-reduced-motion: langsung tampil tanpa animasi gerak.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ThemeToggle } from '../ui/ThemeToggle';
-import { Gamepad2, Users, Trophy, History, Settings } from 'lucide-react';
+import { Gamepad2, Users, Trophy, History, Settings, ChevronDown } from 'lucide-react';
+import { useRooms } from '@/hooks/useRooms';
+import { RoomSelectModal } from '../room/RoomSelectModal';
 
 export function AppNavbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const prefersReducedMotion = useReducedMotion() ?? false;
+  const { rooms, currentRoom, currentRoomData, selectRoom } = useRooms();
+  const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
 
   const links = [
     { label: 'Game',        href: '/',            icon: Gamepad2, isActive: pathname === '/' || pathname.startsWith('/game') },
@@ -87,11 +92,39 @@ export function AppNavbar() {
           })}
         </nav>
 
-        {/* Action Controls: Theme Toggle */}
+        {/* Action Controls: Room Switcher & Theme Toggle */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsRoomModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-black shadow-sm hover:scale-105 active:scale-95 transition-all select-none"
+            title="Ganti Meja Permainan"
+          >
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${
+                currentRoomData.status === 'active'
+                  ? 'bg-emerald-500 animate-pulse'
+                  : 'bg-slate-400'
+              }`}
+            />
+            <span>{currentRoomData.name}</span>
+            <ChevronDown size={13} className="opacity-70" />
+          </button>
+
           <ThemeToggle />
         </div>
       </div>
+
+      <RoomSelectModal
+        isOpen={isRoomModalOpen}
+        onClose={() => setIsRoomModalOpen(false)}
+        rooms={rooms}
+        currentRoom={currentRoom}
+        onSelectRoom={selectRoom}
+        onStartNewGame={(roomId) => {
+          router.push(`/game/new?room=${roomId}`);
+        }}
+      />
     </header>
   );
 }

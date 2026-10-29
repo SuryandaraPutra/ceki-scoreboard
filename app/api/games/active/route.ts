@@ -4,24 +4,27 @@
  *      riwayat round, skor terkalkulasi, dan status batas skor.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { games } from '@/lib/schema';
 import { getGameFullData } from '@/lib/game-queries';
 import { checkScoreLimit, calculateProgress, parseQuickValues } from '@/lib/calc';
 import { makeError } from '@/lib/validations';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    // Cari game dengan status 'active'
+    const searchParams = req.nextUrl.searchParams;
+    const room = searchParams.get('room') || '1';
+
+    // Cari game dengan status 'active' pada room yang diminta
     const [activeGame] = await db
       .select()
       .from(games)
-      .where(eq(games.status, 'active'))
+      .where(and(eq(games.status, 'active'), eq(games.room, room)))
       .limit(1);
 
     if (!activeGame) {
@@ -72,6 +75,7 @@ export async function GET() {
       data: {
         id: activeGame.id,
         name: activeGame.name,
+        room: activeGame.room,
         status: activeGame.status,
         winCondition: activeGame.winCondition,
         initialScore: activeGame.initialScore,

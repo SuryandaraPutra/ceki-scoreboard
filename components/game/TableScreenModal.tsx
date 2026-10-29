@@ -52,6 +52,7 @@ interface TableScreenModalProps {
   game: {
     id: number;
     name?: string | null;
+    room?: string;
     rounds: any[];
     players: PlayerInfo[];
     quickValues: number[];
@@ -167,7 +168,7 @@ export function TableScreenModal({
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="font-black text-sm tracking-tight text-emerald-400">
-                LAYAR MEJA
+                LAYAR MEJA {game.room ? `• MEJA ${game.room}` : ''}
               </span>
             </div>
             <span className="text-white/20">•</span>

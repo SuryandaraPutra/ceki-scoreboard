@@ -17,6 +17,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useActiveGame } from '@/hooks/useActiveGame';
+import { useRooms } from '@/hooks/useRooms';
+import { RoomSelectorBar } from '@/components/room/RoomSelectorBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { ScoreCard } from '@/components/game/ScoreCard';
@@ -47,6 +49,7 @@ import { vibrate } from '@/lib/constants';
 export default function HomePage() {
   const router = useRouter();
   const isOnline = useOnlineStatus();
+  const { rooms, currentRoom, currentRoomData, selectRoom } = useRooms();
   const {
     game,
     isLoading,
@@ -55,7 +58,7 @@ export default function HomePage() {
     deleteRound,
     updateGameSettings,
     finishGame,
-  } = useActiveGame();
+  } = useActiveGame(currentRoom);
 
   // Jaga layar HP tetap menyala selama game aktif
   useWakeLock(Boolean(game));
@@ -339,12 +342,23 @@ export default function HomePage() {
   // ─────────────────────────────────────────────
   if (!isLoading && !game) {
     return (
-      <>
+      <div className="flex flex-col gap-6 animate-fade-in">
+        {/* Bar Pemilih Meja */}
+        <RoomSelectorBar
+          rooms={rooms}
+          currentRoom={currentRoom}
+          onSelectRoom={selectRoom}
+        />
+
         <div className="max-w-2xl mx-auto flex flex-col items-center text-center gap-6 py-8 sm:py-16 animate-fade-in">
           {/* Kartu Ceki Interaktif (Sentuh & Goyang) */}
           <InteractiveCekiCards />
 
           <div>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 text-xs font-bold mb-3 border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-slate-400" />
+              <span>{currentRoomData.name} — Meja Kosong (Tersedia)</span>
+            </div>
             <h1 className="text-3xl sm:text-4xl font-black text-white dark:text-slate-100 tracking-tight drop-shadow-md">
               KOCOK KEKAR
             </h1>
@@ -355,11 +369,11 @@ export default function HomePage() {
 
           {/* Tombol Utama Mulai Game */}
           <Link
-            href="/game/new"
+            href={`/game/new?room=${currentRoom}`}
             className="btn-primary py-4 px-8 text-base font-black flex items-center gap-2.5 shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all"
           >
             <Play size={20} fill="currentColor" />
-            <span>Mulai Game Baru</span>
+            <span>Mulai Game Baru di {currentRoomData.name}</span>
           </Link>
 
           {/* Pintasan Menu Lain */}
@@ -408,7 +422,7 @@ export default function HomePage() {
             router.push('/game/new');
           }}
         />
-      </>
+      </div>
     );
   }
 
@@ -434,6 +448,13 @@ export default function HomePage() {
   // ─────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-5 animate-fade-in">
+      {/* Bar Pemilih Meja */}
+      <RoomSelectorBar
+        rooms={rooms}
+        currentRoom={currentRoom}
+        onSelectRoom={selectRoom}
+      />
+
       {/* Banner Notifikasi Batas Skor Tercapai */}
       {game.hasReachedScoreLimit && (
         <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-rose-500/15 via-rose-500/20 to-amber-500/15 border-2 border-rose-500/70 flex items-center justify-between gap-3 shadow-lg shadow-rose-500/10 animate-fade-in">
@@ -465,6 +486,9 @@ export default function HomePage() {
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="px-2.5 py-0.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-black">
+              {currentRoomData.name}
+            </span>
             <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
               {game.name || `Game #${game.id}`}
             </h1>
@@ -651,7 +675,7 @@ export default function HomePage() {
           summaryText={winnerModalData.summaryText}
           onNewGame={() => {
             setIsWinnerModalOpen(false);
-            router.push('/game/new');
+            router.push(`/game/new?room=${currentRoom}`);
           }}
         />
       )}
@@ -667,7 +691,7 @@ export default function HomePage() {
         onNewGame={() => {
           setIsVictoryShareOpen(false);
           setFinishedGameForVictory(null);
-          router.push('/game/new');
+          router.push(`/game/new?room=${currentRoom}`);
         }}
       />
 

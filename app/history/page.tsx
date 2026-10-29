@@ -15,13 +15,17 @@ import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { VictoryShareModal } from '@/components/game/VictoryShareModal';
 import { formatDate, formatDateTime } from '@/lib/constants';
-import { History, Eye, Trash2, Calendar, Trophy, ChevronRight, Share2 } from 'lucide-react';
+import { History, Eye, Trash2, Calendar, Trophy, ChevronRight, Share2, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function HistoryPage() {
-  const { data, isLoading, mutate } = useSWR('/api/games?status=finished', fetcher);
+  const [roomFilter, setRoomFilter] = useState<string>('all');
+  const queryUrl = roomFilter === 'all'
+    ? '/api/games?status=finished'
+    : `/api/games?status=finished&room=${roomFilter}`;
+  const { data, isLoading, mutate } = useSWR(queryUrl, fetcher);
   const gamesList = data?.data ?? [];
 
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
@@ -55,15 +59,44 @@ export default function HistoryPage() {
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in pb-12">
-      {/* Header Halaman */}
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-          <span>Riwayat Game</span>
-          <History size={24} className="text-emerald-500" />
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Daftar seluruh permainan kartu Ceki yang telah diselesaikan
-        </p>
+      {/* Header Halaman & Filter Meja */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+            <span>Riwayat Game</span>
+            <History size={24} className="text-emerald-500" />
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            Daftar seluruh permainan kartu Ceki yang telah diselesaikan
+          </p>
+        </div>
+
+        {/* Filter Meja */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 self-start sm:self-auto">
+          {[
+            { id: 'all', label: 'Semua Meja' },
+            { id: '1', label: 'Meja 1' },
+            { id: '2', label: 'Meja 2' },
+            { id: '3', label: 'Meja 3' },
+            { id: '4', label: 'Meja 4' },
+          ].map((tab) => {
+            const isSelected = roomFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setRoomFilter(tab.id)}
+                className={`px-3 py-1.5 rounded-2xl text-xs font-bold transition-all shrink-0 ${
+                  isSelected
+                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-500/20'
+                    : 'bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {isLoading ? (
@@ -99,6 +132,9 @@ export default function HistoryPage() {
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold shrink-0">
                       {game.totalRounds} Round
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold shrink-0">
+                      Meja {game.room || '1'}
                     </span>
                   </div>
 
@@ -191,7 +227,7 @@ export default function HistoryPage() {
         title={selectedGame?.name || `Detail Game #${selectedGameId}`}
         description={
           selectedGame
-            ? `${formatDateTime(selectedGame.finishedAt || selectedGame.createdAt)} • ${
+            ? `Meja ${selectedGame.room || '1'} • ${formatDateTime(selectedGame.finishedAt || selectedGame.createdAt)} • ${
                 selectedGame.rounds.length
               } Round`
             : 'Memuat data...'
