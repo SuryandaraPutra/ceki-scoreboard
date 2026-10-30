@@ -6,6 +6,7 @@
 
 :root {
   --pfb-size: 44px;
+  --pfb-inset: -5px;
 }
 
 /* ─────────────────────────────────────────────
@@ -22,9 +23,10 @@
   line-height: 0;
 }
 
+/* Slot Avatar Foto — Berada di DEPAN Border (z-index: 5) */
 .pfb-avatar-slot {
   position: relative;
-  z-index: 2;
+  z-index: 5;
   width: 100%;
   height: 100%;
   display: flex;
@@ -32,11 +34,22 @@
   justify-content: center;
 }
 
+/* Lapisan Cincin Border — Berada di BELAKANG Avatar (z-index: 1) */
 .pfb-border-layer {
   position: absolute;
-  inset: -6px;
+  inset: var(--pfb-inset, -5px);
   pointer-events: none;
-  z-index: 3;
+  z-index: 1;
+  overflow: visible;
+  border-radius: 9999px;
+}
+
+/* Lapisan Ornamen Dekoratif (Crown, Laurel, Gems, Sparkles) — di DEPAN (z-index: 10) */
+.pfb-ornaments-layer {
+  position: absolute;
+  inset: var(--pfb-inset, -5px);
+  pointer-events: none;
+  z-index: 10;
   overflow: visible;
   border-radius: 9999px;
 }
