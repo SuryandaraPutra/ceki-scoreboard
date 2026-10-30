@@ -87,9 +87,13 @@ export interface Records {
  * Hitung kalkulasi skor terperinci beserta kejadian balap (overtake) skor 100 ke atas.
  *
  * Aturan Balap 100+:
- * Apabila seorang pemain berada pada skor 100 ke atas (baik sebelum round atau setelah penambahan poin round ini),
- * lalu pemain lawan yang tadinya di bawah atau sejajar membalapnya dengan selisih >= 5 poin di atasnya,
- * maka pemain yang terbalap skornya otomatis menjadi 0!
+ * - Pemain A harus sudah berada pada skor 100 ke atas (>= 100) sebelum round ini,
+ *   DAN setelah penambahan/pengurangan poin round ini skornya tetap >= 100.
+ * - Jika Pemain A mendapatkan poin minus sehingga skornya turun ke bawah 100 (< 100),
+ *   maka Pemain A TIDAK terbakar/hangus (karena sudah turun di bawah 100).
+ * - Pemain lawan B yang awalnya berada di bawah atau sejajar Pemain A sebelum round ini,
+ *   harus membalap Pemain A dengan selisih >= 5 poin (skor B >= skor A + 5).
+ * - Jika syarat terpenuhi, maka Pemain A yang terbalap skornya otomatis hangus menjadi 0!
  * (Jika skor akhir sama/seri, misal 150 dan 150, tidak di-reset karena tidak ada selisih).
  */
 export function calculateScoresDetailed(
@@ -130,9 +134,13 @@ export function calculateScoresDetailed(
     // Aturan Balap 100+: hanya berlaku pada mode skor tertinggi
     if (winCondition === 'highest') {
       for (const pidA of playerIds) {
-        // Pemain A sudah berada pada skor 100 ke atas sebelum round ini
-        const isAbove100 = prevTotals[pidA] >= 100;
-        if (!isAbove100) continue;
+        // Pemain A harus sudah berada pada skor 100 ke atas sebelum round ini,
+        // DAN setelah round ini skornya juga harus tetap >= 100.
+        // Jika pemain A mendapatkan minus sehingga skornya menjadi di bawah 100,
+        // pemain A tidak terbakar hangus (karena sudah turun di bawah 100).
+        const wasAbove100 = prevTotals[pidA] >= 100;
+        const isStillAbove100 = tempTotals[pidA] >= 100;
+        if (!wasAbove100 || !isStillAbove100) continue;
 
         // Cek apakah ada lawan B yang membalap pemain A dengan selisih >= 5 poin
         for (const pidB of playerIds) {
