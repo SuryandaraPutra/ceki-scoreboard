@@ -51,6 +51,7 @@ export interface LeaderboardEntry {
   playerName: string;
   playerColor: string;
   photoVersion: number;
+  borderId?: string | null;
   gamesPlayed: number;
   wins: number;
   winRate: number;      // 0-1
@@ -67,6 +68,7 @@ export interface RecordEntry {
   playerName: string;
   playerColor: string;
   photoVersion: number;
+  borderId?: string | null;
   gameName: string | null;
   gameId: number;
   date: number; // unix timestamp
@@ -321,7 +323,7 @@ export function calculateLeaderboard(
   games: FinishedGameData[],
   playerInfo: Record<
     number,
-    { name: string; color: string; photoVersion: number }
+    { name: string; color: string; photoVersion: number; borderId?: string | null }
   >
 ): LeaderboardEntry[] {
   // Akumulasi data per pemain
@@ -413,6 +415,7 @@ export function calculateLeaderboard(
         playerName: info?.name ?? `Pemain ${pid}`,
         playerColor: info?.color ?? '#10b981',
         photoVersion: info?.photoVersion ?? 0,
+        borderId: info?.borderId ?? null,
         gamesPlayed: s.gamesPlayed,
         wins: s.wins,
         winRate: s.gamesPlayed > 0 ? s.wins / s.gamesPlayed : 0,

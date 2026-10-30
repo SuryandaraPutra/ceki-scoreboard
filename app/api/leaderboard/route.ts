@@ -75,15 +75,20 @@ export async function GET(req: NextRequest) {
         name: players.name,
         color: players.color,
         photoVersion: players.photoVersion,
+        borderId: players.borderId,
       })
       .from(players);
 
-    const playerMap: Record<number, { name: string; color: string; photoVersion: number }> = {};
+    const playerMap: Record<
+      number,
+      { name: string; color: string; photoVersion: number; borderId?: string | null }
+    > = {};
     for (const p of allPlayers) {
       playerMap[p.id] = {
         name: p.name,
         color: p.color,
         photoVersion: p.photoVersion,
+        borderId: p.borderId ?? null,
       };
     }
 
@@ -196,6 +201,7 @@ export async function GET(req: NextRequest) {
               playerName: info.name,
               playerColor: info.color,
               photoVersion: info.photoVersion,
+              borderId: info.borderId ?? null,
               gameName: g.name,
               gameId: g.id,
               date: g.finishedAt ?? g.createdAt,
@@ -217,6 +223,7 @@ export async function GET(req: NextRequest) {
               playerName: info.name,
               playerColor: info.color,
               photoVersion: info.photoVersion,
+              borderId: info.borderId ?? null,
               gameName: g.name,
               gameId: g.id,
               date: g.finishedAt ?? g.createdAt,
@@ -241,6 +248,7 @@ export async function GET(req: NextRequest) {
           playerName: entry.playerName,
           playerColor: entry.playerColor,
           photoVersion: entry.photoVersion,
+          borderId: entry.borderId ?? null,
           gameName: null,
           gameId: 0,
           date: now,

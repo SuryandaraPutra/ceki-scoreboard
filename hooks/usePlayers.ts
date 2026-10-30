@@ -11,6 +11,7 @@ export interface PlayerItem {
   name: string;
   color: string;
   photoVersion: number;
+  borderId?: string | null;
   archivedAt: number | null;
   createdAt: number;
   updatedAt: number;
@@ -99,6 +100,20 @@ export function usePlayers() {
     return result.data;
   };
 
+  const updateBorder = async (id: number, borderId: string | null) => {
+    const res = await fetch(`/api/players/${id}/border`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ borderId }),
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.error?.message || 'Gagal memperbarui border profil');
+    }
+    await mutate();
+    return result.data as PlayerItem;
+  };
+
   return {
     players,
     activePlayers,
@@ -107,6 +122,7 @@ export function usePlayers() {
     isError: Boolean(error),
     createPlayer,
     updatePlayer,
+    updateBorder,
     deletePlayer,
     uploadPhoto,
     deletePhoto,

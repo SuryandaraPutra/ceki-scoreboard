@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { Avatar } from '../ui/Avatar';
 import { PLAYER_COLOR_OPTIONS } from '@/lib/constants';
-import { Camera, Check } from 'lucide-react';
+import { Camera, Check, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PlayerModalProps {
@@ -19,9 +19,11 @@ interface PlayerModalProps {
     name: string;
     color: string;
     photoVersion: number;
+    borderId?: string | null;
   } | null;
   onSave: (data: { name: string; color: string }) => Promise<any>;
   onOpenPhotoCrop?: () => void;
+  onOpenBorderModal?: () => void;
 }
 
 export function PlayerModal({
@@ -30,6 +32,7 @@ export function PlayerModal({
   player,
   onSave,
   onOpenPhotoCrop,
+  onOpenBorderModal,
 }: PlayerModalProps) {
   const [name, setName] = useState('');
   const [color, setColor] = useState('#10b981');
@@ -80,7 +83,7 @@ export function PlayerModal({
       maxWidth="sm"
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-5 mt-2">
-        {/* Avatar & Tombol Ubah Foto */}
+        {/* Avatar & Tombol Ubah Foto / Border */}
         <div className="flex flex-col items-center gap-2">
           <div className="relative group">
             <Avatar
@@ -88,6 +91,7 @@ export function PlayerModal({
               name={name || 'P'}
               color={color}
               photoVersion={player?.photoVersion ?? 0}
+              borderId={player?.borderId}
               size="xl"
             />
             {isEdit && onOpenPhotoCrop && (
@@ -101,14 +105,31 @@ export function PlayerModal({
               </button>
             )}
           </div>
-          {isEdit && onOpenPhotoCrop && (
-            <button
-              type="button"
-              onClick={onOpenPhotoCrop}
-              className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
-            >
-              Ubah Foto Profil
-            </button>
+          {isEdit && (
+            <div className="flex items-center gap-3">
+              {onOpenPhotoCrop && (
+                <button
+                  type="button"
+                  onClick={onOpenPhotoCrop}
+                  className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
+                >
+                  Ubah Foto Profil
+                </button>
+              )}
+              {onOpenPhotoCrop && onOpenBorderModal && (
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+              )}
+              {onOpenBorderModal && (
+                <button
+                  type="button"
+                  onClick={onOpenBorderModal}
+                  className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-bold hover:underline"
+                >
+                  <Sparkles size={13} />
+                  <span>Border Mewah</span>
+                </button>
+              )}
+            </div>
           )}
         </div>
 

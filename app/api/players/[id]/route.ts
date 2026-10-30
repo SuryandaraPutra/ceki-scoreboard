@@ -34,6 +34,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
         name: players.name,
         color: players.color,
         photoVersion: players.photoVersion,
+        borderId: players.borderId,
         archivedAt: players.archivedAt,
         createdAt: players.createdAt,
         updatedAt: players.updatedAt,
@@ -115,6 +116,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
         name: players.name,
         color: players.color,
         photoVersion: players.photoVersion,
+        borderId: players.borderId,
         archivedAt: players.archivedAt,
       });
 

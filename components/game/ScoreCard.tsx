@@ -19,6 +19,7 @@ interface ScoreCardProps {
     name: string;
     color: string;
     photoVersion: number;
+    borderId?: string | null;
     seatOrder: number;
     totalScore: number;
     rank: number;
@@ -87,6 +88,7 @@ export function ScoreCard({
               name={player.name}
               color={player.color}
               photoVersion={player.photoVersion}
+              borderId={player.borderId}
               size="md"
             />
             {/* Medali Peringkat */}

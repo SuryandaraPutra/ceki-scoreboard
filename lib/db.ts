@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS players (
   color TEXT NOT NULL DEFAULT '#10b981',
   photo BLOB,
   photo_version INTEGER NOT NULL DEFAULT 0,
+  border_id TEXT,
   archived_at INTEGER,
   created_at INTEGER NOT NULL DEFAULT (unixepoch()),
   updated_at INTEGER NOT NULL DEFAULT (unixepoch())
@@ -149,6 +150,11 @@ export async function ensureDbSchema(): Promise<void> {
   await client.executeMultiple(SCHEMA_SQL);
   try {
     await client.execute("ALTER TABLE games ADD COLUMN room TEXT NOT NULL DEFAULT '1'");
+  } catch (e) {
+    // Abaikan jika kolom sudah ada
+  }
+  try {
+    await client.execute('ALTER TABLE players ADD COLUMN border_id TEXT DEFAULT NULL');
   } catch (e) {
     // Abaikan jika kolom sudah ada
   }

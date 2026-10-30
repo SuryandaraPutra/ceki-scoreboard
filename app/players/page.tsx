@@ -14,10 +14,11 @@ import { usePlayers, type PlayerItem } from '@/hooks/usePlayers';
 import { Avatar } from '@/components/ui/Avatar';
 import { PlayerModal } from '@/components/player/PlayerModal';
 import { PhotoCropModal } from '@/components/player/PhotoCropModal';
+import { ProfileBorderModal } from '@/components/player/ProfileBorderModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PinLockModal } from '@/components/ui/PinLockModal';
 import { StaggerChild } from '@/components/layout/PageTransition';
-import { Plus, Edit2, Trash2, Camera, Archive, CheckCircle2, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Camera, Archive, CheckCircle2, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function PlayersPage() {
@@ -28,6 +29,7 @@ export default function PlayersPage() {
     isLoading,
     createPlayer,
     updatePlayer,
+    updateBorder,
     deletePlayer,
     uploadPhoto,
     deletePhoto,
@@ -43,6 +45,9 @@ export default function PlayersPage() {
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [photoPlayer, setPhotoPlayer] = useState<PlayerItem | null>(null);
+
+  const [isBorderModalOpen, setIsBorderModalOpen] = useState(false);
+  const [borderPlayer, setBorderPlayer] = useState<PlayerItem | null>(null);
 
   const [deleteConfirmPlayer, setDeleteConfirmPlayer] = useState<PlayerItem | null>(null);
 
@@ -69,6 +74,11 @@ export default function PlayersPage() {
   const handleOpenPhoto = (p: PlayerItem) => {
     setPhotoPlayer(p);
     setIsPhotoModalOpen(true);
+  };
+
+  const handleOpenBorder = (p: PlayerItem) => {
+    setBorderPlayer(p);
+    setIsBorderModalOpen(true);
   };
 
   const handleSavePlayer = async (data: { name: string; color: string }) => {
@@ -204,6 +214,7 @@ export default function PlayersPage() {
                       name={player.name}
                       color={player.color}
                       photoVersion={player.photoVersion}
+                      borderId={player.borderId}
                       size="lg"
                     />
                     {!isArchived && (
@@ -260,6 +271,13 @@ export default function PlayersPage() {
                         <Camera size={18} />
                       </button>
                       <button
+                        onClick={() => handleOpenBorder(player)}
+                        className="p-2 rounded-xl text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                        title="Pilih Border Profil Mewah"
+                      >
+                        <Sparkles size={18} />
+                      </button>
+                      <button
                         onClick={() => handleOpenEdit(player)}
                         className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         title="Edit Profil"
@@ -294,6 +312,28 @@ export default function PlayersPage() {
             setIsPlayerModalOpen(false);
             handleOpenPhoto(editingPlayer);
           }
+        }}
+        onOpenBorderModal={() => {
+          if (editingPlayer) {
+            setIsPlayerModalOpen(false);
+            handleOpenBorder(editingPlayer);
+          }
+        }}
+      />
+
+      {/* Modal Pemilihan Border Profil Mewah */}
+      <ProfileBorderModal
+        isOpen={isBorderModalOpen}
+        onClose={() => {
+          setIsBorderModalOpen(false);
+          setBorderPlayer(null);
+        }}
+        player={borderPlayer}
+        onSaveBorder={(borderId) => {
+          if (borderPlayer) {
+            return updateBorder(borderPlayer.id, borderId);
+          }
+          return Promise.resolve();
         }}
       />
 

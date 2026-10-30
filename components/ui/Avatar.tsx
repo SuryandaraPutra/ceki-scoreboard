@@ -9,6 +9,8 @@
 
 import React, { useState } from 'react';
 import { getInitials, getAvatarGradient } from '@/lib/calc';
+import { AvatarWithBorder } from './AvatarWithBorder';
+import { BorderId } from '@/lib/borders';
 
 interface AvatarProps {
   id: number;
@@ -17,6 +19,7 @@ interface AvatarProps {
   photoVersion?: number;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
+  borderId?: BorderId | string | null;
 }
 
 const sizeClasses = {
@@ -33,6 +36,7 @@ export function Avatar({
   photoVersion = 0,
   size = 'md',
   className = '',
+  borderId = null,
 }: AvatarProps) {
   const [hasError, setHasError] = useState(false);
 
@@ -41,7 +45,7 @@ export function Avatar({
   const initials = getInitials(name);
   const gradient = getAvatarGradient(color);
 
-  return (
+  const avatarElement = (
     <div
       className={`relative inline-flex items-center justify-center rounded-full shrink-0 overflow-hidden font-bold select-none shadow-sm ${sizeClasses[size]} ${className}`}
       style={{
@@ -65,5 +69,15 @@ export function Avatar({
         </span>
       )}
     </div>
+  );
+
+  if (!borderId) {
+    return avatarElement;
+  }
+
+  return (
+    <AvatarWithBorder borderId={borderId} size={size}>
+      {avatarElement}
+    </AvatarWithBorder>
   );
 }

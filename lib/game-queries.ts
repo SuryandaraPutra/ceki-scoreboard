@@ -18,6 +18,7 @@ export interface GameFullData {
   playerNames: Record<number, string>;
   playerColors: Record<number, string>;
   playerPhotoVersions: Record<number, number>;
+  playerBorderIds: Record<number, string | null>;
   rounds: RoundData[];
   scores: PlayerScore[];
   roundResets: Record<number, number[]>;
@@ -45,6 +46,7 @@ export async function getGameFullData(
       playerName: players.name,
       playerColor: players.color,
       photoVersion: players.photoVersion,
+      borderId: players.borderId,
     })
     .from(gamePlayers)
     .innerJoin(players, eq(players.id, gamePlayers.playerId))
@@ -55,11 +57,13 @@ export async function getGameFullData(
   const playerNames: Record<number, string> = {};
   const playerColors: Record<number, string> = {};
   const playerPhotoVersions: Record<number, number> = {};
+  const playerBorderIds: Record<number, string | null> = {};
 
   for (const row of gpRows) {
     playerNames[row.playerId] = row.playerName;
     playerColors[row.playerId] = row.playerColor;
     playerPhotoVersions[row.playerId] = row.photoVersion;
+    playerBorderIds[row.playerId] = row.borderId ?? null;
   }
 
   // Query 2: ambil semua round + skor (JOIN rounds ↔ round_scores)
@@ -101,6 +105,7 @@ export async function getGameFullData(
     playerNames,
     playerColors,
     playerPhotoVersions,
+    playerBorderIds,
     rounds: roundDataList,
     scores: detailed.players,
     roundResets: detailed.roundResets,

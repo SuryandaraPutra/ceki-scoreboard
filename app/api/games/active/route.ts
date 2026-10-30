@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
         name: fullData.playerNames[pid],
         color: fullData.playerColors[pid],
         photoVersion: fullData.playerPhotoVersions[pid],
+        borderId: fullData.playerBorderIds?.[pid] ?? null,
         seatOrder,
         totalScore: calc.totalScore,
         rank: calc.rank,

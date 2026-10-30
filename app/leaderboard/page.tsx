@@ -128,6 +128,7 @@ export default function LeaderboardPage() {
                       name={top3[1].playerName}
                       color={top3[1].playerColor}
                       photoVersion={top3[1].photoVersion}
+                      borderId={top3[1].borderId}
                       size="lg"
                     />
                     <span className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-2 truncate max-w-full">
@@ -153,6 +154,7 @@ export default function LeaderboardPage() {
                       name={top3[0].playerName}
                       color={top3[0].playerColor}
                       photoVersion={top3[0].photoVersion}
+                      borderId={top3[0].borderId}
                       size="xl"
                       className="ring-4 ring-amber-400"
                     />
@@ -177,6 +179,7 @@ export default function LeaderboardPage() {
                       name={top3[2].playerName}
                       color={top3[2].playerColor}
                       photoVersion={top3[2].photoVersion}
+                      borderId={top3[2].borderId}
                       size="lg"
                     />
                     <span className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-2 truncate max-w-full">
@@ -235,6 +238,7 @@ export default function LeaderboardPage() {
                               name={entry.playerName}
                               color={entry.playerColor}
                               photoVersion={entry.photoVersion}
+                              borderId={entry.borderId}
                               size="sm"
                             />
                             <span className="font-extrabold text-slate-900 dark:text-slate-100">
@@ -306,6 +310,7 @@ export default function LeaderboardPage() {
                       name={records.highestGameScore.playerName}
                       color={records.highestGameScore.playerColor}
                       photoVersion={records.highestGameScore.photoVersion}
+                      borderId={records.highestGameScore.borderId}
                       size="sm"
                     />
                     <div className="flex flex-col min-w-0">
@@ -338,6 +343,7 @@ export default function LeaderboardPage() {
                       name={records.highestRoundScore.playerName}
                       color={records.highestRoundScore.playerColor}
                       photoVersion={records.highestRoundScore.photoVersion}
+                      borderId={records.highestRoundScore.borderId}
                       size="sm"
                     />
                     <div className="flex flex-col min-w-0">
@@ -370,6 +376,7 @@ export default function LeaderboardPage() {
                       name={records.biggestWinMargin.playerName}
                       color={records.biggestWinMargin.playerColor}
                       photoVersion={records.biggestWinMargin.photoVersion}
+                      borderId={records.biggestWinMargin.borderId}
                       size="sm"
                     />
                     <div className="flex flex-col min-w-0">
@@ -402,6 +409,7 @@ export default function LeaderboardPage() {
                       name={records.longestWinStreak.playerName}
                       color={records.longestWinStreak.playerColor}
                       photoVersion={records.longestWinStreak.photoVersion}
+                      borderId={records.longestWinStreak.borderId}
                       size="sm"
                     />
                     <div className="flex flex-col min-w-0">

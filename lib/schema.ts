@@ -37,6 +37,8 @@ export const players = sqliteTable(
     photo: blob('photo'),
     /** Versi foto: dinaikkan setiap kali foto diubah (untuk cache busting) */
     photoVersion: integer('photo_version').notNull().default(0),
+    /** Border profil dekoratif mewah (nullable, default null) */
+    borderId: text('border_id'),
     /** Soft delete: pemain diarsipkan jika punya riwayat game */
     archivedAt: integer('archived_at'), // unix timestamp atau null
     createdAt: integer('created_at')
